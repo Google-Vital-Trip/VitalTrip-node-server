@@ -5,6 +5,7 @@ import { FirstAidModule } from './first-aid/first-aid.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { UserModule } from './user/user.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     UsersModule,
     UserModule,
+    LocationModule,
   ],
 })
 export class AppModule {}
