@@ -15,10 +15,8 @@ export class FirstAidService {
   async getAdvice(dto: AdviceRequestDto) {
     const { symptomType, symptomDetail, latitude, longitude } = dto;
 
-    const { countryCode, countryName } = await this.geocodingService.getCountryInfo(
-      latitude,
-      longitude,
-    );
+    const { countryCode, countryName } =
+      await this.geocodingService.getCountryInfo(latitude, longitude);
 
     const [emergencyContact, aiResult] = await Promise.all([
       Promise.resolve(this.emergencyContactService.getContacts(countryCode)),

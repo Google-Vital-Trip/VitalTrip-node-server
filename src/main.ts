@@ -10,7 +10,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGIN : '*',
+    origin:
+      process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGIN : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -29,4 +30,4 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 }
-bootstrap();
+void bootstrap();

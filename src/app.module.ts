@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FirstAidModule } from './first-aid/first-aid.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { FirstAidModule } from './first-aid/first-aid.module';
       inject: [ConfigService],
     }),
     FirstAidModule,
+    AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

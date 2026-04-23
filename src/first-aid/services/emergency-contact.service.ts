@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { EmergencyContact, EMERGENCY_CONTACTS } from '../constants/emergency-contacts';
+import {
+  EmergencyContact,
+  EMERGENCY_CONTACTS,
+} from '../constants/emergency-contacts';
 
 @Injectable()
 export class EmergencyContactService {

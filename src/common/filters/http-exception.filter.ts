@@ -29,7 +29,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const res = exceptionResponse as Record<string, unknown>;
         message = (res.message as string) ?? exception.message;
-        errorCode = (res.errorCode as ErrorCode) ?? this.statusToErrorCode(status);
+        errorCode =
+          (res.errorCode as ErrorCode) ?? this.statusToErrorCode(status);
 
         // ValidationPipe 에러는 message가 배열
         if (Array.isArray(res.message)) {
@@ -37,11 +38,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
           errorCode = ErrorCode.VALIDATION_FAILED;
         }
       } else {
-        message = exceptionResponse as string;
+        message = exceptionResponse;
         errorCode = this.statusToErrorCode(status);
       }
     } else {
-      this.logger.error(`Unhandled exception on ${request.method} ${request.url}`, exception);
+      this.logger.error(
+        `Unhandled exception on ${request.method} ${request.url}`,
+        exception,
+      );
     }
 
     response.status(status).json({
@@ -51,7 +55,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
   }
 
-  private statusToErrorCode(status: number): ErrorCode {
+  private statusToErrorCode(status: HttpStatus): ErrorCode {
     switch (status) {
       case HttpStatus.UNAUTHORIZED:
         return ErrorCode.UNAUTHORIZED;
