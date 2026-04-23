@@ -57,4 +57,8 @@ export class UsersService {
   async updatePassword(id: number, hashedPassword: string): Promise<void> {
     await this.usersRepository.update(id, { password: hashedPassword });
   }
+
+  async existsByEmail(email: string): Promise<boolean> {
+    return this.usersRepository.existsBy({ email });
+  }
 }

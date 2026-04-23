@@ -100,6 +100,11 @@ export class AuthService {
     return { accessToken };
   }
 
+  async checkEmail(email: string): Promise<{ available: boolean }> {
+    const exists = await this.usersService.existsByEmail(email);
+    return { available: !exists };
+  }
+
   async changePassword(userId: number, dto: ChangePasswordDto): Promise<void> {
     if (dto.newPassword !== dto.newPasswordConfirm) {
       throw new BadRequestException({

@@ -1,14 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Put, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { CheckEmailDto } from './dto/check-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('check-email')
+  checkEmail(@Query() query: CheckEmailDto) {
+    return this.authService.checkEmail(query.email);
+  }
 
   @Post('signup')
   async signup(@Body() dto: SignupDto) {
