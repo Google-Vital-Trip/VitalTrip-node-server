@@ -66,4 +66,16 @@ export class UsersService {
   async existsByEmail(email: string): Promise<boolean> {
     return this.usersRepository.existsBy({ email });
   }
+
+  async updateProfile(
+    id: number,
+    data: {
+      name: string;
+      birthDate: string;
+      countryCode: string;
+      phoneNumber: string;
+    },
+  ): Promise<void> {
+    await this.usersRepository.update(id, data);
+  }
 }
