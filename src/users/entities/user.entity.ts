@@ -7,6 +7,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export enum Provider {
+  LOCAL = 'LOCAL',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -30,6 +34,12 @@ export class User {
 
   @Column({ type: 'varchar', length: 20 })
   phoneNumber: string;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  profileImageUrl: string | null;
+
+  @Column({ type: 'enum', enum: Provider, default: Provider.LOCAL })
+  provider: Provider;
 
   @Column({ type: 'text', nullable: true, select: false })
   refreshToken: string | null;
