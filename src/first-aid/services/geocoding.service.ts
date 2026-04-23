@@ -15,16 +15,16 @@ export class GeocodingService {
     longitude: number,
   ): Promise<GeocodingResult> {
     try {
-      const { data } = await axios.get(
-        'https://api.bigdatacloud.net/data/reverse-geocode-client',
-        {
-          params: { latitude, longitude, localityLanguage: 'en' },
-          timeout: 5000,
-        },
-      );
+      const { data } = await axios.get<{
+        countryCode?: string;
+        countryName?: string;
+      }>('https://api.bigdatacloud.net/data/reverse-geocode-client', {
+        params: { latitude, longitude, localityLanguage: 'en' },
+        timeout: 5000,
+      });
 
-      const countryCode = (data.countryCode as string | undefined) ?? 'UNKNOWN';
-      const countryName = (data.countryName as string | undefined) ?? 'Unknown';
+      const countryCode = data.countryCode ?? 'UNKNOWN';
+      const countryName = data.countryName ?? 'Unknown';
 
       return { countryCode, countryName };
     } catch (error) {

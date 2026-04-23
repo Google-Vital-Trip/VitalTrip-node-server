@@ -38,7 +38,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           errorCode = ErrorCode.VALIDATION_FAILED;
         }
       } else {
-        message = exceptionResponse as string;
+        message = exceptionResponse;
         errorCode = this.statusToErrorCode(status);
       }
     } else {
@@ -55,7 +55,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
   }
 
-  private statusToErrorCode(status: number): ErrorCode {
+  private statusToErrorCode(status: HttpStatus): ErrorCode {
     switch (status) {
       case HttpStatus.UNAUTHORIZED:
         return ErrorCode.UNAUTHORIZED;
