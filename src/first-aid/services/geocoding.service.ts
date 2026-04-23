@@ -10,7 +10,10 @@ interface GeocodingResult {
 export class GeocodingService {
   private readonly logger = new Logger(GeocodingService.name);
 
-  async getCountryInfo(latitude: number, longitude: number): Promise<GeocodingResult> {
+  async getCountryInfo(
+    latitude: number,
+    longitude: number,
+  ): Promise<GeocodingResult> {
     try {
       const { data } = await axios.get(
         'https://api.bigdatacloud.net/data/reverse-geocode-client',
@@ -25,7 +28,9 @@ export class GeocodingService {
 
       return { countryCode, countryName };
     } catch (error) {
-      this.logger.warn(`Geocoding 실패 (${latitude}, ${longitude}): ${(error as Error).message}`);
+      this.logger.warn(
+        `Geocoding 실패 (${latitude}, ${longitude}): ${(error as Error).message}`,
+      );
       return { countryCode: 'UNKNOWN', countryName: 'Unknown' };
     }
   }

@@ -19,7 +19,9 @@ export class UsersService {
     countryCode: string;
     phoneNumber: string;
   }): Promise<User> {
-    const existing = await this.usersRepository.findOne({ where: { email: data.email } });
+    const existing = await this.usersRepository.findOne({
+      where: { email: data.email },
+    });
     if (existing) {
       throw new ConflictException({
         message: '이미 사용 중인 이메일입니다.',
@@ -50,7 +52,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  async updateRefreshToken(id: number, refreshToken: string | null): Promise<void> {
+  async updateRefreshToken(
+    id: number,
+    refreshToken: string | null,
+  ): Promise<void> {
     await this.usersRepository.update(id, { refreshToken });
   }
 

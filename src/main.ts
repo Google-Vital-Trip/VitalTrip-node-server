@@ -10,7 +10,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGIN : '*',
+    origin:
+      process.env.NODE_ENV === 'production' ? process.env.ALLOWED_ORIGIN : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });

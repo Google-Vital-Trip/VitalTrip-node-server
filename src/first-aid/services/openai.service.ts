@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { SymptomType } from '../dto/advice-request.dto';
@@ -43,7 +47,9 @@ export class OpenAiService {
   private readonly client: OpenAI;
 
   constructor(private readonly config: ConfigService) {
-    this.client = new OpenAI({ apiKey: this.config.get<string>('OPENAI_API_KEY') });
+    this.client = new OpenAI({
+      apiKey: this.config.get<string>('OPENAI_API_KEY'),
+    });
   }
 
   async getAdvice(
@@ -70,7 +76,8 @@ export class OpenAiService {
     } catch (error) {
       this.logger.error(`OpenAI 호출 실패: ${(error as Error).message}`);
       throw new InternalServerErrorException({
-        message: 'AI 서비스에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        message:
+          'AI 서비스에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
         errorCode: ErrorCode.AI_SERVICE_UNAVAILABLE,
       });
     }

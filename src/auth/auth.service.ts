@@ -12,7 +12,8 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
 
 const SALT_ROUNDS = 12;
-const DUMMY_HASH = '$2b$12$invalidhashpadding00000000000000000000000000000000000000';
+const DUMMY_HASH =
+  '$2b$12$invalidhashpadding00000000000000000000000000000000000000';
 
 @Injectable()
 export class AuthService {
@@ -60,7 +61,10 @@ export class AuthService {
       });
     }
 
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.email);
+    const { accessToken, refreshToken } = this.generateTokens(
+      user.id,
+      user.email,
+    );
     await this.usersService.updateRefreshToken(user.id, refreshToken);
 
     return {
@@ -78,9 +82,12 @@ export class AuthService {
     let payload: { sub: number; email: string };
 
     try {
-      payload = this.jwtService.verify<{ sub: number; email: string }>(refreshToken, {
-        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
-      });
+      payload = this.jwtService.verify<{ sub: number; email: string }>(
+        refreshToken,
+        {
+          secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+        },
+      );
     } catch {
       throw new UnauthorizedException({
         message: '유효하지 않은 리프레시 토큰입니다.',
@@ -134,7 +141,10 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.config.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRES_IN', '30d') as never,
+      expiresIn: this.config.get<string>(
+        'JWT_REFRESH_EXPIRES_IN',
+        '30d',
+      ) as never,
     });
     return { accessToken, refreshToken };
   }

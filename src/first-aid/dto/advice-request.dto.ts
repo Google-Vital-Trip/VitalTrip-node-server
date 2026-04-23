@@ -1,4 +1,12 @@
-import { IsEnum, IsNumber, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export enum SymptomType {
   BLEEDING = 'BLEEDING',

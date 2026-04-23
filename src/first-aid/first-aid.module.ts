@@ -7,6 +7,11 @@ import { OpenAiService } from './services/openai.service';
 
 @Module({
   controllers: [FirstAidController],
-  providers: [FirstAidService, GeocodingService, EmergencyContactService, OpenAiService],
+  providers: [
+    FirstAidService,
+    GeocodingService,
+    EmergencyContactService,
+    OpenAiService,
+  ],
 })
 export class FirstAidModule {}
