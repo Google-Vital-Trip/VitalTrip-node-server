@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(mysql*)",
+      "Bash(mysqldump*)",
+      "Bash(mysqladmin*)",
+      "Bash(pnpm migration:revert*)",
+      "Bash(* DROP *)",
+      "Bash(* TRUNCATE *)",
+      "Bash(* DELETE FROM *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}
