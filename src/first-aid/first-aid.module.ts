@@ -13,5 +13,6 @@ import { OpenAiService } from './services/openai.service';
     EmergencyContactService,
     OpenAiService,
   ],
+  exports: [GeocodingService, EmergencyContactService],
 })
 export class FirstAidModule {}
