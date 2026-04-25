@@ -30,10 +30,14 @@ const OVERPASS_MIRRORS = [
   'https://overpass.openstreetmap.ru/api/interpreter',
 ];
 
-const FACILITY_AMENITY_MAP: Record<FacilityType, string> = {
-  [FacilityType.HOSPITAL]: '"amenity"~"hospital|clinic|doctors"',
-  [FacilityType.PHARMACY]: '"amenity"="pharmacy"',
-  [FacilityType.EMERGENCY]: '"amenity"="hospital"]["emergency"="yes"',
+const FACILITY_QUERIES: Record<FacilityType, string[]> = {
+  [FacilityType.HOSPITAL]: [
+    '["amenity"="hospital"]',
+    '["amenity"="clinic"]',
+    '["amenity"="doctors"]',
+  ],
+  [FacilityType.PHARMACY]: ['["amenity"="pharmacy"]'],
+  [FacilityType.EMERGENCY]: ['["amenity"="hospital"]["emergency"="yes"]'],
 };
 
 @Injectable()
@@ -47,15 +51,9 @@ export class OverpassService {
     type: FacilityType,
     language: string,
   ): Promise<NearbyFacility[]> {
-    const amenityFilter = FACILITY_AMENITY_MAP[type];
-    const query = `
-      [out:json][timeout:25];
-      (
-        node[${amenityFilter}](around:${radius},${latitude},${longitude});
-        way[${amenityFilter}](around:${radius},${latitude},${longitude});
-      );
-      out body center;
-    `;
+    const filters = FACILITY_QUERIES[type];
+    const nodes = filters.map((f) => `node${f}(around:${radius},${latitude},${longitude});`).join('\n');
+    const query = `[out:json][timeout:30];(${nodes});out body;`;
 
     let elements: OverpassElement[] = [];
     let lastError: unknown;
@@ -64,7 +62,7 @@ export class OverpassService {
       try {
         const response = await axios.get<{ elements: OverpassElement[] }>(mirror, {
           params: { data: query },
-          timeout: 30000,
+          timeout: 60000,
           httpsAgent: new https.Agent({ family: 4 }),
         });
         elements = response.data.elements;
