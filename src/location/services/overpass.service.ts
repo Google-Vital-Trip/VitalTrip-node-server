@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
@@ -34,6 +34,8 @@ const FACILITY_AMENITY_MAP: Record<FacilityType, string> = {
 
 @Injectable()
 export class OverpassService {
+  private readonly logger = new Logger(OverpassService.name);
+
   async getNearbyFacilities(
     latitude: number,
     longitude: number,
@@ -59,7 +61,8 @@ export class OverpassService {
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 30000 },
       );
       elements = response.data.elements;
-    } catch {
+    } catch (error) {
+      this.logger.error('Overpass API 호출 실패', error instanceof Error ? error.message : error);
       throw new ServiceUnavailableException({
         message: '주변 의료시설 검색 서비스를 일시적으로 사용할 수 없습니다.',
         errorCode: ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
