@@ -1,6 +1,5 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
-import * as https from 'https';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
 
@@ -63,7 +62,6 @@ export class OverpassService {
         const response = await axios.get<{ elements: OverpassElement[] }>(mirror, {
           params: { data: query },
           timeout: 60000,
-          httpsAgent: new https.Agent({ family: 4 }),
         });
         elements = response.data.elements;
         break;
