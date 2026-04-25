@@ -26,9 +26,8 @@ interface OverpassElement {
 }
 
 const OVERPASS_MIRRORS = [
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.openstreetmap.ru/api/interpreter',
   'https://overpass-api.de/api/interpreter',
+  'https://overpass.openstreetmap.ru/api/interpreter',
 ];
 
 const FACILITY_AMENITY_MAP: Record<FacilityType, string> = {
