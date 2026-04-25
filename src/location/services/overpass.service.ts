@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { FacilityType } from '../dto/nearby-query.dto';
 
 export interface NearbyFacility {
   name: string;
@@ -25,18 +26,27 @@ interface OverpassElement {
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
+const FACILITY_AMENITY_MAP: Record<FacilityType, string> = {
+  [FacilityType.HOSPITAL]: '"amenity"~"hospital|clinic|doctors"',
+  [FacilityType.PHARMACY]: '"amenity"="pharmacy"',
+  [FacilityType.EMERGENCY]: '"amenity"="hospital"]["emergency"="yes"',
+};
+
 @Injectable()
 export class OverpassService {
   async getNearbyFacilities(
     latitude: number,
     longitude: number,
     radius: number,
+    type: FacilityType,
+    language: string,
   ): Promise<NearbyFacility[]> {
+    const amenityFilter = FACILITY_AMENITY_MAP[type];
     const query = `
       [out:json][timeout:25];
       (
-        node["amenity"~"hospital|clinic|doctors|pharmacy"](around:${radius},${latitude},${longitude});
-        way["amenity"~"hospital|clinic|doctors|pharmacy"](around:${radius},${latitude},${longitude});
+        node[${amenityFilter}](around:${radius},${latitude},${longitude});
+        way[${amenityFilter}](around:${radius},${latitude},${longitude});
       );
       out body center;
     `;
@@ -57,14 +67,14 @@ export class OverpassService {
     }
 
     return elements
-      .filter((el) => el.tags?.name)
+      .filter((el) => el.tags?.name || el.tags?.[`name:${language}`])
       .map((el) => {
         const lat = el.lat ?? el.center?.lat ?? 0;
         const lon = el.lon ?? el.center?.lon ?? 0;
         const tags = el.tags ?? {};
 
         return {
-          name: tags.name,
+          name: tags[`name:${language}`] ?? tags.name,
           address: this.buildAddress(tags),
           phoneNumber: tags.phone ?? tags['contact:phone'] ?? null,
           latitude: lat,

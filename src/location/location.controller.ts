@@ -18,6 +18,8 @@ export class LocationController {
       query.latitude,
       query.longitude,
       query.radius,
+      query.type,
+      query.language,
     );
   }
 }

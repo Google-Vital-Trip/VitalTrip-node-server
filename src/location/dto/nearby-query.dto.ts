@@ -1,18 +1,24 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+
+export enum FacilityType {
+  HOSPITAL = 'hospital',
+  PHARMACY = 'pharmacy',
+  EMERGENCY = 'emergency',
+}
 
 export class NearbyQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(-90)
   @Max(90)
-  latitude: number;
+  latitude!: number;
 
   @Type(() => Number)
   @IsNumber()
   @Min(-180)
   @Max(180)
-  longitude: number;
+  longitude!: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -20,4 +26,12 @@ export class NearbyQueryDto {
   @Min(500)
   @Max(50000)
   radius: number = 5000;
+
+  @IsOptional()
+  @IsEnum(FacilityType)
+  type: FacilityType = FacilityType.HOSPITAL;
+
+  @IsOptional()
+  @IsString()
+  language: string = 'en';
 }
