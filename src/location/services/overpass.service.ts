@@ -43,7 +43,15 @@ const FACILITY_QUERIES: Record<FacilityType, string[]> = {
 };
 
 const ipv4Agent = new https.Agent({
-  lookup: (hostname, _opts, callback) => dns.lookup(hostname, { family: 4 }, callback),
+  lookup: (hostname, _opts, callback) => {
+    dns.resolve4(hostname, (err, addresses) => {
+      if (err || !addresses?.length) {
+        callback(err ?? new Error(`No IPv4 for ${hostname}`), '', 4);
+        return;
+      }
+      callback(null, addresses[0], 4);
+    });
+  },
 });
 
 @Injectable()
