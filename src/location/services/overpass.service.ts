@@ -31,11 +31,7 @@ const OVERPASS_MIRRORS = [
 ];
 
 const FACILITY_QUERIES: Record<FacilityType, string[]> = {
-  [FacilityType.HOSPITAL]: [
-    '["amenity"="hospital"]',
-    '["amenity"="clinic"]',
-    '["amenity"="doctors"]',
-  ],
+  [FacilityType.HOSPITAL]: ['["amenity"~"^(hospital|clinic|doctors)$"]'],
   [FacilityType.PHARMACY]: ['["amenity"="pharmacy"]'],
   [FacilityType.EMERGENCY]: ['["amenity"="hospital"]["emergency"="yes"]'],
 };
