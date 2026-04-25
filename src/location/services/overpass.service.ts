@@ -1,7 +1,5 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
-import * as dns from 'dns';
-import * as https from 'https';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
 
@@ -42,17 +40,6 @@ const FACILITY_QUERIES: Record<FacilityType, string[]> = {
   [FacilityType.EMERGENCY]: ['["amenity"="hospital"]["emergency"="yes"]'],
 };
 
-const ipv4Agent = new https.Agent({
-  lookup: (hostname, _opts, callback) => {
-    dns.resolve4(hostname, (err, addresses) => {
-      if (err || !addresses?.length) {
-        callback(err ?? new Error(`No IPv4 for ${hostname}`), '', 4);
-        return;
-      }
-      callback(null, addresses[0], 4);
-    });
-  },
-});
 
 @Injectable()
 export class OverpassService {
@@ -77,7 +64,6 @@ export class OverpassService {
         const response = await axios.get<{ elements: OverpassElement[] }>(mirror, {
           params: { data: query },
           timeout: 30000,
-          httpsAgent: ipv4Agent,
         });
         elements = response.data.elements;
         break;
