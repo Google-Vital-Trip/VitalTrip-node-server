@@ -25,9 +25,8 @@ interface OverpassElement {
 }
 
 const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
   'https://overpass.openstreetmap.ru/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
 ];
 
 const FACILITY_QUERIES: Record<FacilityType, string[]> = {
