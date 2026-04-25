@@ -41,9 +41,12 @@ const FACILITY_QUERIES: Record<FacilityType, string[]> = {
 };
 
 
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class OverpassService {
   private readonly logger = new Logger(OverpassService.name);
+  private readonly cache = new Map<string, { data: NearbyFacility[]; expiresAt: number }>();
 
   async getNearbyFacilities(
     latitude: number,
@@ -52,6 +55,12 @@ export class OverpassService {
     type: FacilityType,
     language: string,
   ): Promise<NearbyFacility[]> {
+    const cacheKey = `${type}:${latitude.toFixed(2)}:${longitude.toFixed(2)}:${radius}:${language}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+
     const filters = FACILITY_QUERIES[type];
     const nodes = filters.map((f) => `node${f}(around:${radius},${latitude},${longitude});`).join('\n');
     const query = `[out:json][timeout:30];(${nodes});out body;`;
@@ -83,7 +92,7 @@ export class OverpassService {
       });
     }
 
-    return elements
+    const result = elements
       .filter((el) => el.tags?.name || el.tags?.[`name:${language}`])
       .map((el) => {
         const lat = el.lat ?? el.center?.lat ?? 0;
@@ -103,6 +112,9 @@ export class OverpassService {
         };
       })
       .sort((a, b) => a.distance - b.distance);
+
+    this.cache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+    return result;
   }
 
   private buildAddress(tags: Record<string, string>): string | null {
