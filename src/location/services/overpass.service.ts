@@ -1,4 +1,8 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import axios from 'axios';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
@@ -35,13 +39,15 @@ const FACILITY_QUERIES: Record<FacilityType, string[]> = {
   [FacilityType.EMERGENCY]: ['["amenity"="hospital"]["emergency"="yes"]'],
 };
 
-
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 @Injectable()
 export class OverpassService {
   private readonly logger = new Logger(OverpassService.name);
-  private readonly cache = new Map<string, { data: NearbyFacility[]; expiresAt: number }>();
+  private readonly cache = new Map<
+    string,
+    { data: NearbyFacility[]; expiresAt: number }
+  >();
 
   async getNearbyFacilities(
     latitude: number,
@@ -57,7 +63,9 @@ export class OverpassService {
     }
 
     const filters = FACILITY_QUERIES[type];
-    const nodes = filters.map((f) => `node${f}(around:${radius},${latitude},${longitude});`).join('\n');
+    const nodes = filters
+      .map((f) => `node${f}(around:${radius},${latitude},${longitude});`)
+      .join('\n');
     const query = `[out:json][timeout:25];(${nodes});out body 100;`;
 
     let elements: OverpassElement[] = [];
@@ -65,21 +73,28 @@ export class OverpassService {
 
     for (const mirror of OVERPASS_MIRRORS) {
       try {
-        const response = await axios.get<{ elements: OverpassElement[] }>(mirror, {
-          params: { data: query },
-          timeout: 30000,
-        });
+        const response = await axios.get<{ elements: OverpassElement[] }>(
+          mirror,
+          {
+            params: { data: query },
+            timeout: 30000,
+          },
+        );
         elements = response.data.elements;
         break;
       } catch (error) {
         lastError = error;
-        this.logger.warn(`Overpass 미러 실패 (${mirror}) - code: ${axios.isAxiosError(error) ? error.code : 'unknown'}, msg: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(
+          `Overpass 미러 실패 (${mirror}) - code: ${axios.isAxiosError(error) ? error.code : 'unknown'}, msg: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
     if (!elements.length && lastError) {
       if (axios.isAxiosError(lastError)) {
-        this.logger.error(`Overpass API 전체 실패 - status: ${lastError.response?.status}, code: ${lastError.code}`);
+        this.logger.error(
+          `Overpass API 전체 실패 - status: ${lastError.response?.status}, code: ${lastError.code}`,
+        );
       }
       throw new ServiceUnavailableException({
         message: '주변 의료시설 검색 서비스를 일시적으로 사용할 수 없습니다.',
@@ -100,7 +115,8 @@ export class OverpassService {
           phoneNumber: tags.phone ?? tags['contact:phone'] ?? null,
           latitude: lat,
           longitude: lon,
-          distance: Math.round(this.haversine(latitude, longitude, lat, lon) * 10) / 10,
+          distance:
+            Math.round(this.haversine(latitude, longitude, lat, lon) * 10) / 10,
           openNow: this.isOpenNow(tags.opening_hours),
           openingHours: this.parseOpeningHours(tags.opening_hours),
           websiteUrl: tags.website ?? tags['contact:website'] ?? null,
@@ -108,7 +124,10 @@ export class OverpassService {
       })
       .sort((a, b) => a.distance - b.distance);
 
-    this.cache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+    this.cache.set(cacheKey, {
+      data: result,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
     return result;
   }
 
@@ -124,7 +143,12 @@ export class OverpassService {
     return parts.length > 0 ? parts.join(' ') : (tags['addr:full'] ?? null);
   }
 
-  private haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private haversine(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371000;
     const toRad = (deg: number) => (deg * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
