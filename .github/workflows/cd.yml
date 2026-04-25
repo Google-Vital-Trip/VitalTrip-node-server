@@ -15,7 +15,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/vitaltrip-server
+            cd ~/VitalTrip-node-server
             git pull origin main
             docker compose down
             docker compose up -d --build
