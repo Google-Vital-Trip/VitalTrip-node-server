@@ -24,7 +24,11 @@ interface OverpassElement {
   tags?: Record<string, string>;
 }
 
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+const OVERPASS_MIRRORS = [
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.ru/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+];
 
 const FACILITY_AMENITY_MAP: Record<FacilityType, string> = {
   [FacilityType.HOSPITAL]: '"amenity"~"hospital|clinic|doctors"',
@@ -53,19 +57,27 @@ export class OverpassService {
       out body center;
     `;
 
-    let elements: OverpassElement[];
-    try {
-      const response = await axios.post<{ elements: OverpassElement[] }>(
-        OVERPASS_URL,
-        `data=${encodeURIComponent(query)}`,
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 30000 },
-      );
-      elements = response.data.elements;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        this.logger.error(`Overpass API 호출 실패 - status: ${error.response?.status}, code: ${error.code}, message: ${error.message}`);
-      } else {
-        this.logger.error(`Overpass API 호출 실패 - ${String(error)}`);
+    let elements: OverpassElement[] = [];
+    let lastError: unknown;
+
+    for (const mirror of OVERPASS_MIRRORS) {
+      try {
+        const response = await axios.post<{ elements: OverpassElement[] }>(
+          mirror,
+          `data=${encodeURIComponent(query)}`,
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 30000 },
+        );
+        elements = response.data.elements;
+        break;
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(`Overpass 미러 실패 (${mirror}), 다음 서버 시도 중...`);
+      }
+    }
+
+    if (!elements.length && lastError) {
+      if (axios.isAxiosError(lastError)) {
+        this.logger.error(`Overpass API 전체 실패 - status: ${lastError.response?.status}, code: ${lastError.code}`);
       }
       throw new ServiceUnavailableException({
         message: '주변 의료시설 검색 서비스를 일시적으로 사용할 수 없습니다.',
