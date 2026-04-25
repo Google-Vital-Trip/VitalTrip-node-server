@@ -67,7 +67,7 @@ export class OverpassService {
         break;
       } catch (error) {
         lastError = error;
-        this.logger.warn(`Overpass 미러 실패 (${mirror}), 다음 서버 시도 중...`);
+        this.logger.warn(`Overpass 미러 실패 (${mirror}) - code: ${axios.isAxiosError(error) ? error.code : 'unknown'}, msg: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
