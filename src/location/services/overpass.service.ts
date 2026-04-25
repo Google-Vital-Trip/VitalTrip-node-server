@@ -63,7 +63,7 @@ export class OverpassService {
       elements = response.data.elements;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        this.logger.error(`Overpass API 호출 실패 - status: ${error.response?.status}, message: ${error.message}`);
+        this.logger.error(`Overpass API 호출 실패 - status: ${error.response?.status}, code: ${error.code}, message: ${error.message}`);
       } else {
         this.logger.error(`Overpass API 호출 실패 - ${String(error)}`);
       }
