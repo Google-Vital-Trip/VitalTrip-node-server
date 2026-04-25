@@ -62,11 +62,10 @@ export class OverpassService {
 
     for (const mirror of OVERPASS_MIRRORS) {
       try {
-        const response = await axios.post<{ elements: OverpassElement[] }>(
-          mirror,
-          `data=${encodeURIComponent(query)}`,
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 30000 },
-        );
+        const response = await axios.get<{ elements: OverpassElement[] }>(mirror, {
+          params: { data: query },
+          timeout: 30000,
+        });
         elements = response.data.elements;
         break;
       } catch (error) {
