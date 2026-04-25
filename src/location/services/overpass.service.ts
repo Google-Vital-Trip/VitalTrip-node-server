@@ -62,7 +62,11 @@ export class OverpassService {
       );
       elements = response.data.elements;
     } catch (error) {
-      this.logger.error('Overpass API 호출 실패', error instanceof Error ? error.message : error);
+      if (axios.isAxiosError(error)) {
+        this.logger.error(`Overpass API 호출 실패 - status: ${error.response?.status}, message: ${error.message}`);
+      } else {
+        this.logger.error(`Overpass API 호출 실패 - ${String(error)}`);
+      }
       throw new ServiceUnavailableException({
         message: '주변 의료시설 검색 서비스를 일시적으로 사용할 수 없습니다.',
         errorCode: ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
