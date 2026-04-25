@@ -63,7 +63,7 @@ export class OverpassService {
 
     const filters = FACILITY_QUERIES[type];
     const nodes = filters.map((f) => `node${f}(around:${radius},${latitude},${longitude});`).join('\n');
-    const query = `[out:json][timeout:30];(${nodes});out body;`;
+    const query = `[out:json][timeout:25];(${nodes});out body 100;`;
 
     let elements: OverpassElement[] = [];
     let lastError: unknown;
