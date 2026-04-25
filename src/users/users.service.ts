@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -19,17 +19,21 @@ export class UsersService {
     countryCode: string;
     phoneNumber: string;
   }): Promise<User> {
-    const existing = await this.usersRepository.findOne({
-      where: { email: data.email },
-    });
-    if (existing) {
-      throw new ConflictException({
-        message: '이미 사용 중인 이메일입니다.',
-        errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
-      });
-    }
     const user = this.usersRepository.create(data);
-    return this.usersRepository.save(user);
+    try {
+      return await this.usersRepository.save(user);
+    } catch (e) {
+      if (
+        e instanceof QueryFailedError &&
+        (e as QueryFailedError & { code: string }).code === 'ER_DUP_ENTRY'
+      ) {
+        throw new ConflictException({
+          message: '이미 사용 중인 이메일입니다.',
+          errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+        });
+      }
+      throw e;
+    }
   }
 
   async findByEmailWithPassword(email: string): Promise<User | null> {
@@ -44,6 +48,14 @@ export class UsersService {
     return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.refreshToken')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  async findByIdWithPassword(id: number): Promise<User | null> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
       .where('user.id = :id', { id })
       .getOne();
   }

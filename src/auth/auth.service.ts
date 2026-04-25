@@ -120,9 +120,7 @@ export class AuthService {
       });
     }
 
-    const user = await this.usersService.findByEmailWithPassword(
-      (await this.usersService.findById(userId))!.email,
-    );
+    const user = await this.usersService.findByIdWithPassword(userId);
 
     const isValid = await bcrypt.compare(dto.currentPassword, user!.password);
     if (!isValid) {
