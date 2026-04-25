@@ -13,11 +13,10 @@ export class LocationService {
   ) {}
 
   async identifyCountry(latitude: number, longitude: number) {
-    const { countryCode, countryName } = await this.geocodingService.getCountryInfo(
-      latitude,
-      longitude,
-    );
-    const emergencyContact = this.emergencyContactService.getContacts(countryCode);
+    const { countryCode, countryName } =
+      await this.geocodingService.getCountryInfo(latitude, longitude);
+    const emergencyContact =
+      this.emergencyContactService.getContacts(countryCode);
 
     return { countryCode, countryName, latitude, longitude, emergencyContact };
   }
@@ -29,6 +28,12 @@ export class LocationService {
     type: FacilityType,
     language: string,
   ) {
-    return this.googlePlacesService.getNearbyFacilities(latitude, longitude, radius, type, language);
+    return this.googlePlacesService.getNearbyFacilities(
+      latitude,
+      longitude,
+      radius,
+      type,
+      language,
+    );
   }
 }

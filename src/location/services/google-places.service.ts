@@ -1,10 +1,15 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import axios from 'axios';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
 import { NearbyFacility } from './overpass.service';
 
-const GOOGLE_PLACES_URL = 'https://places.googleapis.com/v1/places:searchNearby';
+const GOOGLE_PLACES_URL =
+  'https://places.googleapis.com/v1/places:searchNearby';
 
 const FACILITY_TYPES: Record<FacilityType, string[]> = {
   [FacilityType.HOSPITAL]: ['hospital', 'doctor'],
@@ -26,7 +31,10 @@ const CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 @Injectable()
 export class GooglePlacesService {
   private readonly logger = new Logger(GooglePlacesService.name);
-  private readonly cache = new Map<string, { data: NearbyFacility[]; expiresAt: number }>();
+  private readonly cache = new Map<
+    string,
+    { data: NearbyFacility[]; expiresAt: number }
+  >();
 
   async getNearbyFacilities(
     latitude: number,
@@ -50,7 +58,7 @@ export class GooglePlacesService {
     }
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<{ places?: GooglePlace[] }>(
         GOOGLE_PLACES_URL,
         {
           includedTypes: FACILITY_TYPES[type],
@@ -72,7 +80,7 @@ export class GooglePlacesService {
         },
       );
 
-      const places: GooglePlace[] = response.data.places ?? [];
+      const places = response.data.places ?? [];
       const result: NearbyFacility[] = places
         .map((place) => ({
           name: place.displayName?.text ?? '',
@@ -82,7 +90,12 @@ export class GooglePlacesService {
           longitude: place.location.longitude,
           distance:
             Math.round(
-              this.haversine(latitude, longitude, place.location.latitude, place.location.longitude) * 10,
+              this.haversine(
+                latitude,
+                longitude,
+                place.location.latitude,
+                place.location.longitude,
+              ) * 10,
             ) / 10,
           openNow: place.regularOpeningHours?.openNow ?? null,
           openingHours: place.regularOpeningHours?.weekdayDescriptions ?? null,
@@ -90,7 +103,10 @@ export class GooglePlacesService {
         }))
         .sort((a, b) => a.distance - b.distance);
 
-      this.cache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+      this.cache.set(cacheKey, {
+        data: result,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
       return result;
     } catch (error) {
       this.logger.error(
@@ -104,7 +120,12 @@ export class GooglePlacesService {
     }
   }
 
-  private haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private haversine(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371000;
     const toRad = (deg: number) => (deg * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
