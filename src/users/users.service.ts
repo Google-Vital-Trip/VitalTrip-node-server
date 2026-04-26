@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { Provider, User } from './entities/user.entity';
 import { ErrorCode } from '../common/constants/error-codes';
 
 @Injectable()
@@ -77,6 +77,40 @@ export class UsersService {
 
   async existsByEmail(email: string): Promise<boolean> {
     return this.usersRepository.existsBy({ email });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { googleId } });
+  }
+
+  async createGoogleUser(data: {
+    email: string;
+    name: string;
+    googleId: string;
+    profileImageUrl: string | null;
+    birthDate: string;
+    countryCode: string;
+    phoneNumber: string;
+  }): Promise<User> {
+    const existing = await this.usersRepository.findOne({
+      where: { email: data.email },
+    });
+    if (existing) {
+      throw new ConflictException({
+        message: '이미 사용 중인 이메일입니다.',
+        errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+      });
+    }
+    const user = this.usersRepository.create({
+      ...data,
+      password: null,
+      provider: Provider.GOOGLE,
+    });
+    return this.usersRepository.save(user);
   }
 
   async updateProfile(
