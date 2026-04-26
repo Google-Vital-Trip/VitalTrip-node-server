@@ -124,4 +124,16 @@ export class UsersService {
   ): Promise<void> {
     await this.usersRepository.update(id, data);
   }
+
+  async findAllPaginated(
+    page: number,
+    size: number,
+  ): Promise<{ users: User[]; total: number }> {
+    const [users, total] = await this.usersRepository.findAndCount({
+      skip: page * size,
+      take: size,
+      order: { createdAt: 'DESC' },
+    });
+    return { users, total };
+  }
 }

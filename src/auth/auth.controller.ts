@@ -9,6 +9,7 @@ import {
   Query,
   Request,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -27,6 +28,8 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CheckEmailDto } from './dto/check-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ErrorCode } from '../common/constants/error-codes';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
+import type { Request as ExpressRequest } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -124,6 +127,71 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
   ) {
     await this.authService.changePassword(req.user.id, dto);
+    return null;
+  }
+
+  @ApiOperation({ summary: '관리자 로그인' })
+  @ApiOkResponse({
+    description: '어드민 로그인 성공 (accessToken/refreshToken 쿠키 설정)',
+    schema: {
+      example: { message: '어드민 로그인이 완료되었습니다', data: null },
+    },
+  })
+  @ResponseMessage('어드민 로그인이 완료되었습니다')
+  @Post('admin/login')
+  @HttpCode(HttpStatus.OK)
+  async adminLogin(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.adminLogin(
+      dto.email,
+      dto.password,
+    );
+    const isProduction = this.config.get<string>('NODE_ENV') === 'production';
+    res.cookie('adminAccessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000,
+    });
+    res.cookie('adminRefreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return null;
+  }
+
+  @ApiOperation({ summary: '관리자 토큰 갱신 (쿠키 기반)' })
+  @ApiOkResponse({
+    schema: { example: { message: '토큰이 갱신되었습니다', data: null } },
+  })
+  @ResponseMessage('토큰이 갱신되었습니다')
+  @Post('admin/refresh')
+  @HttpCode(HttpStatus.OK)
+  async adminRefresh(
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken: string | undefined = req.cookies[
+      'adminRefreshToken'
+    ] as string | undefined;
+    if (!refreshToken) {
+      throw new UnauthorizedException({
+        message: '리프레시 토큰이 없습니다.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+    const accessToken = await this.authService.adminRefresh(refreshToken);
+    const isProduction = this.config.get<string>('NODE_ENV') === 'production';
+    res.cookie('adminAccessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000,
+    });
     return null;
   }
 

@@ -12,6 +12,11 @@ export enum Provider {
   GOOGLE = 'GOOGLE',
 }
 
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -45,6 +50,9 @@ export class User {
 
   @Column({ type: 'enum', enum: Provider, default: Provider.LOCAL })
   provider: Provider;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
   @Column({ type: 'text', nullable: true, select: false })
   refreshToken: string | null;

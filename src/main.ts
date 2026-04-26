@@ -1,9 +1,11 @@
 import * as dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser = require('cookie-parser') as typeof import('cookie-parser');
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -28,8 +30,9 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('VitalTrip API')
