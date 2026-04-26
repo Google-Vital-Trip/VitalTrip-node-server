@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
+import { UserRole } from '../users/entities/user.entity';
 
 export interface GoogleCallbackResult {
   type: 'existing' | 'new';
@@ -226,6 +228,78 @@ export class AuthService {
     );
 
     return { type: 'new', tempToken, email, name, profileImageUrl };
+  }
+
+  async adminLogin(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const user = await this.usersService.findByEmailWithPassword(email);
+
+    if (!user) {
+      await bcrypt.compare(password, DUMMY_HASH);
+      throw new UnauthorizedException({
+        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        errorCode: ErrorCode.INVALID_CREDENTIALS,
+      });
+    }
+
+    if (!user.password) {
+      throw new UnauthorizedException({
+        message: '소셜 로그인 계정입니다.',
+        errorCode: ErrorCode.INVALID_CREDENTIALS,
+      });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException({
+        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        errorCode: ErrorCode.INVALID_CREDENTIALS,
+      });
+    }
+
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        message: '관리자 권한이 필요합니다.',
+        errorCode: ErrorCode.FORBIDDEN,
+      });
+    }
+
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
+  }
+
+  async adminRefresh(refreshToken: string): Promise<string> {
+    let payload: { sub: number; email: string };
+
+    try {
+      payload = this.jwtService.verify<{ sub: number; email: string }>(
+        refreshToken,
+        { secret: this.config.get<string>('JWT_REFRESH_SECRET') },
+      );
+    } catch {
+      throw new UnauthorizedException({
+        message: '유효하지 않은 리프레시 토큰입니다.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new UnauthorizedException({
+        message: '유효하지 않은 리프레시 토큰입니다.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        message: '관리자 권한이 필요합니다.',
+        errorCode: ErrorCode.FORBIDDEN,
+      });
+    }
+
+    const { accessToken } = this.generateTokens(user.id, user.email);
+    return accessToken;
   }
 
   private generateTokens(userId: number, email: string) {
