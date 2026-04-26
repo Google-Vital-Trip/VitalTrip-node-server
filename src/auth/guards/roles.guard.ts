@@ -20,7 +20,9 @@ export class RolesGuard implements CanActivate {
     );
     if (!requiredRoles) return true;
 
-    const { user } = context.switchToHttp().getRequest<{ user?: { role: UserRole } }>();
+    const { user } = context
+      .switchToHttp()
+      .getRequest<{ user?: { role: UserRole } }>();
     if (!user || !requiredRoles.includes(user.role)) {
       throw new ForbiddenException({
         message: '관리자 권한이 필요합니다.',

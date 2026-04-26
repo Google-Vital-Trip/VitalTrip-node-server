@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -50,10 +44,7 @@ export class AdminController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get('users')
-  async getUsers(
-    @Query('page') page = 0,
-    @Query('size') size = 20,
-  ) {
+  async getUsers(@Query('page') page = 0, @Query('size') size = 20) {
     const pageNum = Number(page);
     const sizeNum = Math.min(Math.max(Number(size), 1), 100);
     return this.adminService.getUsers(pageNum, sizeNum);
@@ -65,9 +56,7 @@ export class AdminController {
   })
   @UseGuards(OptionalJwtAuthGuard)
   @Get('me')
-  checkAdmin(
-    @Request() req: { user?: { role: UserRole } | null },
-  ) {
+  checkAdmin(@Request() req: { user?: { role: UserRole } | null }) {
     return { isAdmin: this.adminService.isAdmin(req.user ?? null) };
   }
 }

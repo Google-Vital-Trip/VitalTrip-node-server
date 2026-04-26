@@ -230,7 +230,10 @@ export class AuthService {
     return { type: 'new', tempToken, email, name, profileImageUrl };
   }
 
-  async adminLogin(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async adminLogin(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.findByEmailWithPassword(email);
 
     if (!user) {

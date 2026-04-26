@@ -13,7 +13,10 @@ import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
 export class ResponseInterceptor<T> implements NestInterceptor<T, unknown> {
   constructor(private readonly reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<unknown> {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler<T>,
+  ): Observable<unknown> {
     const message =
       this.reflector.getAllAndOverride<string>(RESPONSE_MESSAGE_KEY, [
         context.getHandler(),

@@ -133,7 +133,9 @@ export class AuthController {
   @ApiOperation({ summary: '관리자 로그인' })
   @ApiOkResponse({
     description: '어드민 로그인 성공 (accessToken/refreshToken 쿠키 설정)',
-    schema: { example: { message: '어드민 로그인이 완료되었습니다', data: null } },
+    schema: {
+      example: { message: '어드민 로그인이 완료되었습니다', data: null },
+    },
   })
   @ResponseMessage('어드민 로그인이 완료되었습니다')
   @Post('admin/login')
@@ -173,7 +175,9 @@ export class AuthController {
     @Request() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const refreshToken = (req.cookies as Record<string, string>)['adminRefreshToken'];
+    const refreshToken: string | undefined = req.cookies[
+      'adminRefreshToken'
+    ] as string | undefined;
     if (!refreshToken) {
       throw new UnauthorizedException({
         message: '리프레시 토큰이 없습니다.',

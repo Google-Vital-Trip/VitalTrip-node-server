@@ -7,7 +7,10 @@ export class AdminService {
   constructor(private readonly usersService: UsersService) {}
 
   async getUsers(page: number, size: number) {
-    const { users, total } = await this.usersService.findAllPaginated(page, size);
+    const { users, total } = await this.usersService.findAllPaginated(
+      page,
+      size,
+    );
     const totalPages = Math.ceil(total / size);
 
     const content = users.map((u) => ({
