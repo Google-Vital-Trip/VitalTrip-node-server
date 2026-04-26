@@ -22,10 +22,11 @@ export class FirstAidController {
             countryCode: 'KR',
             countryName: 'South Korea',
             latitude: 37.5665,
-            longitude: 126.9780,
+            longitude: 126.978,
             emergencyContact: { police: '112', fire: '119', ambulance: '119' },
           },
-          disclaimer: '본 정보는 참고용이며 전문 의료 조언을 대체하지 않습니다.',
+          disclaimer:
+            '본 정보는 참고용이며 전문 의료 조언을 대체하지 않습니다.',
           confidence: 0.92,
           blogLinks: ['https://example.com/first-aid-bleeding'],
         },

@@ -22,9 +22,7 @@ export class AddGoogleAuth1745100000000 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE \`users\` DROP INDEX \`IDX_users_googleId\``,
     );
-    await queryRunner.query(
-      `ALTER TABLE \`users\` DROP COLUMN \`googleId\``,
-    );
+    await queryRunner.query(`ALTER TABLE \`users\` DROP COLUMN \`googleId\``);
     await queryRunner.query(
       `ALTER TABLE \`users\` MODIFY COLUMN \`provider\` enum('LOCAL') NOT NULL DEFAULT 'LOCAL'`,
     );
