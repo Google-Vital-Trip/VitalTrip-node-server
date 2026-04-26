@@ -9,6 +9,7 @@ import {
 
 export enum Provider {
   LOCAL = 'LOCAL',
+  GOOGLE = 'GOOGLE',
 }
 
 @Entity('users')
@@ -23,8 +24,12 @@ export class User {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 255, select: false })
-  password: string;
+  @Column({ type: 'varchar', length: 255, select: false, nullable: true })
+  password: string | null;
+
+  @Index({ unique: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  googleId: string | null;
 
   @Column({ type: 'date' })
   birthDate: string;
