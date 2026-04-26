@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -16,6 +17,8 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -23,11 +26,15 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CheckEmailDto } from './dto/check-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { ErrorCode } from '../common/constants/error-codes';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly config: ConfigService,
+  ) {}
 
   @ApiOperation({ summary: '이메일 중복 확인' })
   @ApiOkResponse({
@@ -118,5 +125,63 @@ export class AuthController {
   ) {
     await this.authService.changePassword(req.user.id, dto);
     return null;
+  }
+
+  @ApiOperation({ summary: 'Google OAuth2 콜백 (Google이 호출)' })
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Res() res: Response,
+  ) {
+    const frontendUrl = this.config.get<string>('FRONTEND_URL')!;
+    const callbackPath = '/auth/callback';
+
+    if (error || !code) {
+      const params = new URLSearchParams({
+        error: 'true',
+        errorCode: ErrorCode.OAUTH_ERROR,
+        message: 'Google 인증이 취소되었습니다.',
+      });
+      return res.redirect(`${frontendUrl}${callbackPath}?${params.toString()}`);
+    }
+
+    try {
+      const result = await this.authService.handleGoogleCallback(code);
+
+      if (result.type === 'existing') {
+        const params = new URLSearchParams({
+          success: 'true',
+          accessToken: result.accessToken!,
+          refreshToken: result.refreshToken!,
+          email: result.email,
+          name: result.name,
+          ...(result.profileImageUrl && {
+            profileImageUrl: result.profileImageUrl,
+          }),
+        });
+        return res.redirect(
+          `${frontendUrl}${callbackPath}?${params.toString()}`,
+        );
+      }
+
+      const params = new URLSearchParams({
+        needsProfile: 'true',
+        tempToken: result.tempToken!,
+        email: result.email,
+        name: result.name,
+        ...(result.profileImageUrl && {
+          profileImageUrl: result.profileImageUrl,
+        }),
+      });
+      return res.redirect(`${frontendUrl}${callbackPath}?${params.toString()}`);
+    } catch {
+      const params = new URLSearchParams({
+        error: 'true',
+        errorCode: ErrorCode.OAUTH_ERROR,
+        message: '로그인 처리 중 오류가 발생했습니다.',
+      });
+      return res.redirect(`${frontendUrl}${callbackPath}?${params.toString()}`);
+    }
   }
 }
