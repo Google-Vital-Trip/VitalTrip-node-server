@@ -12,7 +12,7 @@ import { UsersService } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '@prisma/client';
 
 export interface GoogleCallbackResult {
   type: 'existing' | 'new';
