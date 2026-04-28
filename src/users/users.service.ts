@@ -1,15 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
-import { Provider, User } from './entities/user.entity';
+import { Prisma, Provider } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: {
     email: string;
@@ -18,15 +14,11 @@ export class UsersService {
     birthDate: string;
     countryCode: string;
     phoneNumber: string;
-  }): Promise<User> {
-    const user = this.usersRepository.create(data);
+  }) {
     try {
-      return await this.usersRepository.save(user);
+      return await this.prisma.user.create({ data });
     } catch (e) {
-      if (
-        e instanceof QueryFailedError &&
-        (e as QueryFailedError & { code: string }).code === 'ER_DUP_ENTRY'
-      ) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         throw new ConflictException({
           message: '이미 사용 중인 이메일입니다.',
           errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
@@ -36,55 +28,89 @@ export class UsersService {
     }
   }
 
-  async findByEmailWithPassword(email: string): Promise<User | null> {
-    return this.usersRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.email = :email', { email })
-      .getOne();
+  async findByEmailWithPassword(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findByIdWithRefreshToken(id: number): Promise<User | null> {
-    return this.usersRepository
-      .createQueryBuilder('user')
-      .addSelect('user.refreshToken')
-      .where('user.id = :id', { id })
-      .getOne();
+  async findByIdWithRefreshToken(id: number) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findByIdWithPassword(id: number): Promise<User | null> {
-    return this.usersRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.id = :id', { id })
-      .getOne();
+  async findByIdWithPassword(id: number) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findById(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        googleId: true,
+        birthDate: true,
+        countryCode: true,
+        phoneNumber: true,
+        profileImageUrl: true,
+        provider: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
-  async updateRefreshToken(
-    id: number,
-    refreshToken: string | null,
-  ): Promise<void> {
-    await this.usersRepository.update(id, { refreshToken });
+  async updateRefreshToken(id: number, refreshToken: string | null) {
+    await this.prisma.user.update({ where: { id }, data: { refreshToken } });
   }
 
-  async updatePassword(id: number, hashedPassword: string): Promise<void> {
-    await this.usersRepository.update(id, { password: hashedPassword });
+  async updatePassword(id: number, hashedPassword: string) {
+    await this.prisma.user.update({ where: { id }, data: { password: hashedPassword } });
   }
 
-  async existsByEmail(email: string): Promise<boolean> {
-    return this.usersRepository.existsBy({ email });
+  async existsByEmail(email: string) {
+    const count = await this.prisma.user.count({ where: { email } });
+    return count > 0;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        googleId: true,
+        birthDate: true,
+        countryCode: true,
+        phoneNumber: true,
+        profileImageUrl: true,
+        provider: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
-  async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { googleId } });
+  async findByGoogleId(googleId: string) {
+    return this.prisma.user.findUnique({
+      where: { googleId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        googleId: true,
+        birthDate: true,
+        countryCode: true,
+        phoneNumber: true,
+        profileImageUrl: true,
+        provider: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
   async createGoogleUser(data: {
@@ -95,45 +121,49 @@ export class UsersService {
     birthDate: string;
     countryCode: string;
     phoneNumber: string;
-  }): Promise<User> {
-    const existing = await this.usersRepository.findOne({
-      where: { email: data.email },
-    });
+  }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (existing) {
       throw new ConflictException({
         message: '이미 사용 중인 이메일입니다.',
         errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
       });
     }
-    const user = this.usersRepository.create({
-      ...data,
-      password: null,
-      provider: Provider.GOOGLE,
+    return this.prisma.user.create({
+      data: { ...data, password: null, provider: Provider.GOOGLE },
     });
-    return this.usersRepository.save(user);
   }
 
   async updateProfile(
     id: number,
-    data: {
-      name: string;
-      birthDate: string;
-      countryCode: string;
-      phoneNumber: string;
-    },
-  ): Promise<void> {
-    await this.usersRepository.update(id, data);
+    data: { name: string; birthDate: string; countryCode: string; phoneNumber: string },
+  ) {
+    await this.prisma.user.update({ where: { id }, data });
   }
 
-  async findAllPaginated(
-    page: number,
-    size: number,
-  ): Promise<{ users: User[]; total: number }> {
-    const [users, total] = await this.usersRepository.findAndCount({
-      skip: page * size,
-      take: size,
-      order: { createdAt: 'DESC' },
-    });
+  async findAllPaginated(page: number, size: number) {
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip: page * size,
+        take: size,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          googleId: true,
+          birthDate: true,
+          countryCode: true,
+          phoneNumber: true,
+          profileImageUrl: true,
+          provider: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
     return { users, total };
   }
 }

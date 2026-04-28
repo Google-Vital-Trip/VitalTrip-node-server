@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
