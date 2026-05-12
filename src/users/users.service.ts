@@ -122,16 +122,19 @@ export class UsersService {
     countryCode: string;
     phoneNumber: string;
   }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) {
-      throw new ConflictException({
-        message: '이미 사용 중인 이메일입니다.',
-        errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+    try {
+      return await this.prisma.user.create({
+        data: { ...data, password: null, provider: Provider.GOOGLE },
       });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException({
+          message: '이미 사용 중인 이메일입니다.',
+          errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+        });
+      }
+      throw e;
     }
-    return this.prisma.user.create({
-      data: { ...data, password: null, provider: Provider.GOOGLE },
-    });
   }
 
   async updateProfile(
