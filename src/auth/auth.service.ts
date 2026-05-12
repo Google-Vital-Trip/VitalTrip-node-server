@@ -123,7 +123,10 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
-    if (!user || user.refreshToken !== refreshToken) {
+    const tokenValid = user?.refreshToken
+      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      : false;
+    if (!user || !tokenValid) {
       throw new UnauthorizedException({
         message: '유효하지 않은 리프레시 토큰입니다.',
         errorCode: ErrorCode.UNAUTHORIZED,
@@ -288,7 +291,10 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
-    if (!user || user.refreshToken !== refreshToken) {
+    const tokenValid = user?.refreshToken
+      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      : false;
+    if (!user || !tokenValid) {
       throw new UnauthorizedException({
         message: '유효하지 않은 리프레시 토큰입니다.',
         errorCode: ErrorCode.UNAUTHORIZED,

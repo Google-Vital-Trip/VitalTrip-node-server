@@ -1,5 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, Provider } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -61,7 +62,8 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: number, refreshToken: string | null) {
-    await this.prisma.user.update({ where: { id }, data: { refreshToken } });
+    const hashed = refreshToken ? await bcrypt.hash(refreshToken, 10) : null;
+    await this.prisma.user.update({ where: { id }, data: { refreshToken: hashed } });
   }
 
   async updatePassword(id: number, hashedPassword: string) {
