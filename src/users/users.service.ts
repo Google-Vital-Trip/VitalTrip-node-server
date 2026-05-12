@@ -1,5 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, Provider } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -61,7 +62,8 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: number, refreshToken: string | null) {
-    await this.prisma.user.update({ where: { id }, data: { refreshToken } });
+    const hashed = refreshToken ? await bcrypt.hash(refreshToken, 10) : null;
+    await this.prisma.user.update({ where: { id }, data: { refreshToken: hashed } });
   }
 
   async updatePassword(id: number, hashedPassword: string) {
@@ -122,16 +124,19 @@ export class UsersService {
     countryCode: string;
     phoneNumber: string;
   }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) {
-      throw new ConflictException({
-        message: '이미 사용 중인 이메일입니다.',
-        errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+    try {
+      return await this.prisma.user.create({
+        data: { ...data, password: null, provider: Provider.GOOGLE },
       });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException({
+          message: '이미 사용 중인 이메일입니다.',
+          errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+        });
+      }
+      throw e;
     }
-    return this.prisma.user.create({
-      data: { ...data, password: null, provider: Provider.GOOGLE },
-    });
   }
 
   async updateProfile(
@@ -142,7 +147,7 @@ export class UsersService {
   }
 
   async findAllPaginated(page: number, size: number) {
-    const [users, total] = await Promise.all([
+    const [users, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
         skip: page * size,
         take: size,

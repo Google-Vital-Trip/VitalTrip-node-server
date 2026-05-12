@@ -184,13 +184,19 @@ export class AuthController {
         errorCode: ErrorCode.UNAUTHORIZED,
       });
     }
-    const accessToken = await this.authService.adminRefresh(refreshToken);
+    const tokens = await this.authService.adminRefresh(refreshToken);
     const isProduction = this.config.get<string>('NODE_ENV') === 'production';
-    res.cookie('adminAccessToken', accessToken, {
+    res.cookie('adminAccessToken', tokens.accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'strict',
       maxAge: 60 * 60 * 1000,
+    });
+    res.cookie('adminRefreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     return null;
   }

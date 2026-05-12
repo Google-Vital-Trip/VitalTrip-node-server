@@ -123,15 +123,19 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
-    if (!user || user.refreshToken !== refreshToken) {
+    const tokenValid = user?.refreshToken
+      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      : false;
+    if (!user || !tokenValid) {
       throw new UnauthorizedException({
         message: '유효하지 않은 리프레시 토큰입니다.',
         errorCode: ErrorCode.UNAUTHORIZED,
       });
     }
 
-    const { accessToken } = this.generateTokens(user.id, user.email);
-    return { accessToken };
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 
   async checkEmail(email: string): Promise<{ available: boolean }> {
@@ -271,7 +275,7 @@ export class AuthService {
     return tokens;
   }
 
-  async adminRefresh(refreshToken: string): Promise<string> {
+  async adminRefresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
     let payload: { sub: number; email: string };
 
     try {
@@ -287,7 +291,10 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
-    if (!user || user.refreshToken !== refreshToken) {
+    const tokenValid = user?.refreshToken
+      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      : false;
+    if (!user || !tokenValid) {
       throw new UnauthorizedException({
         message: '유효하지 않은 리프레시 토큰입니다.',
         errorCode: ErrorCode.UNAUTHORIZED,
@@ -301,8 +308,9 @@ export class AuthService {
       });
     }
 
-    const { accessToken } = this.generateTokens(user.id, user.email);
-    return accessToken;
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 
   private generateTokens(userId: number, email: string) {
