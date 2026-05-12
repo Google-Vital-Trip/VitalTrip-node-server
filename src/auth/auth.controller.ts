@@ -26,6 +26,7 @@ import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CheckEmailDto } from './dto/check-email.dto';
+import { GoogleSignupDto } from './dto/google-signup.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ErrorCode } from '../common/constants/error-codes';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
@@ -199,6 +200,31 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     return null;
+  }
+
+  @ApiOperation({ summary: 'Google 신규 회원가입 완료 (tempToken + 추가 정보)' })
+  @ApiOkResponse({
+    description: 'Access/Refresh 토큰 발급',
+    schema: {
+      example: {
+        message: '성공',
+        data: {
+          accessToken: 'eyJhbGci...',
+          refreshToken: 'eyJhbGci...',
+          user: { id: 1, email: 'user@example.com', name: '홍길동' },
+        },
+      },
+    },
+  })
+  @Post('google/signup')
+  @HttpCode(HttpStatus.OK)
+  async completeGoogleSignup(@Body() dto: GoogleSignupDto) {
+    return this.authService.completeGoogleSignup(
+      dto.tempToken,
+      dto.birthDate,
+      dto.countryCode,
+      dto.phoneNumber,
+    );
   }
 
   @ApiOperation({ summary: 'Google OAuth2 콜백 (Google이 호출)' })

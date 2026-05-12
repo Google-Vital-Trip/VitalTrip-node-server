@@ -234,6 +234,51 @@ export class AuthService {
     return { type: 'new', tempToken, email, name, profileImageUrl };
   }
 
+  async completeGoogleSignup(
+    tempToken: string,
+    birthDate: string,
+    countryCode: string,
+    phoneNumber: string,
+  ) {
+    let payload: { googleId: string; email: string; name: string; profileImageUrl: string | null; type: string };
+
+    try {
+      payload = this.jwtService.verify(tempToken, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException({
+        message: '유효하지 않거나 만료된 토큰입니다. Google 로그인을 다시 시도해주세요.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    if (payload.type !== 'google_pending') {
+      throw new UnauthorizedException({
+        message: '유효하지 않은 토큰입니다.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    const user = await this.usersService.createGoogleUser({
+      email: payload.email,
+      name: payload.name,
+      googleId: payload.googleId,
+      profileImageUrl: payload.profileImageUrl,
+      birthDate,
+      countryCode,
+      phoneNumber,
+    });
+
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: { id: user.id, email: user.email, name: user.name },
+    };
+  }
+
   async adminLogin(
     email: string,
     password: string,
