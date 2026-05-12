@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -66,15 +67,14 @@ export class AuthService {
     const user = await this.usersService.findByEmailWithPassword(email);
 
     if (!user) {
-      await bcrypt.compare(password, DUMMY_HASH);
-      throw new UnauthorizedException({
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-        errorCode: ErrorCode.INVALID_CREDENTIALS,
+      throw new NotFoundException({
+        message: '존재하지 않는 이메일입니다.',
+        errorCode: ErrorCode.USER_NOT_FOUND,
       });
     }
 
     if (!user.password) {
-      throw new UnauthorizedException({
+      throw new BadRequestException({
         message: '소셜 로그인 계정입니다. Google로 로그인해주세요.',
         errorCode: ErrorCode.INVALID_CREDENTIALS,
       });
@@ -227,11 +227,57 @@ export class AuthService {
       { googleId, email, name, profileImageUrl, type: 'google_pending' },
       {
         secret: this.config.get<string>('JWT_SECRET'),
-        expiresIn: '10m',
+        expiresIn: '30m',
       },
     );
 
     return { type: 'new', tempToken, email, name, profileImageUrl };
+  }
+
+  async completeGoogleSignup(
+    tempToken: string,
+    name: string,
+    birthDate: string,
+    countryCode: string,
+    phoneNumber: string,
+  ) {
+    let payload: { googleId: string; email: string; profileImageUrl: string | null; type: string };
+
+    try {
+      payload = this.jwtService.verify(tempToken, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException({
+        message: '유효하지 않거나 만료된 토큰입니다. Google 로그인을 다시 시도해주세요.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    if (payload.type !== 'google_pending') {
+      throw new UnauthorizedException({
+        message: '유효하지 않은 토큰입니다.',
+        errorCode: ErrorCode.UNAUTHORIZED,
+      });
+    }
+
+    const user = await this.usersService.createGoogleUser({
+      email: payload.email,
+      name,
+      googleId: payload.googleId,
+      profileImageUrl: payload.profileImageUrl,
+      birthDate,
+      countryCode,
+      phoneNumber,
+    });
+
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: { id: user.id, email: user.email, name: user.name },
+    };
   }
 
   async adminLogin(
