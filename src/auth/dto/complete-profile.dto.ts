@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
-export class GoogleSignupDto {
-  @ApiProperty({ example: 'eyJhbGci...', description: 'Google 콜백에서 받은 tempToken (10분 유효)' })
+export class CompleteProfileDto {
+  @ApiProperty({ example: '홍길동', description: '이름 (1~100자)' })
   @IsString()
-  tempToken: string;
+  @MinLength(1)
+  @MaxLength(100)
+  name: string;
 
   @ApiProperty({ example: '2000-01-01', description: '생년월일 (YYYY-MM-DD)' })
   @IsDateString()
