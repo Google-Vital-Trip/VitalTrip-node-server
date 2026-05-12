@@ -145,7 +145,7 @@ export class UsersService {
   }
 
   async findAllPaginated(page: number, size: number) {
-    const [users, total] = await Promise.all([
+    const [users, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
         skip: page * size,
         take: size,
