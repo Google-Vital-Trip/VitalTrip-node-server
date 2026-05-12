@@ -18,4 +18,4 @@ COPY --from=builder /app/dist ./dist
 COPY prisma ./prisma
 RUN pnpm prisma:generate
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "pnpm prisma:deploy && node dist/main"]
