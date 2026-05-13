@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import { SymptomType } from '../dto/advice-request.dto';
-import { ErrorCode } from '../../common/constants/error-codes';
+import { SymptomType } from '../dto/advice-request.dto.js';
+import { ErrorCode } from '../../common/constants/error-codes.js';
+import { RagService } from './rag.service.js';
 
 interface AiAdviceResult {
   content: string;
@@ -72,7 +73,10 @@ export class OpenAiService {
   private readonly logger = new Logger(OpenAiService.name);
   private readonly client: OpenAI;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly ragService: RagService,
+  ) {
     this.client = new OpenAI({
       apiKey: this.config.get<string>('OPENAI_API_KEY'),
     });
@@ -84,11 +88,19 @@ export class OpenAiService {
     countryCode: string,
   ): Promise<AiAdviceResult> {
     try {
+      const ragContext = await this.ragService.findRelevantDocuments(
+        `${symptomType} ${symptomDetail}`,
+      );
+
+      const systemPrompt = ragContext
+        ? `${SYSTEM_PROMPT}\n\n## RETRIEVED FIRST-AID REFERENCE\nUse the following verified medical guidelines as your primary source:\n\n${ragContext}`
+        : SYSTEM_PROMPT;
+
       const completion = await this.client.chat.completions.create({
         model: 'gpt-4o',
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content: [

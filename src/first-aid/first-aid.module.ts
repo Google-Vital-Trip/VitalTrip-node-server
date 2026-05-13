@@ -4,6 +4,8 @@ import { FirstAidService } from './first-aid.service';
 import { GeocodingService } from './services/geocoding.service';
 import { EmergencyContactService } from './services/emergency-contact.service';
 import { OpenAiService } from './services/openai.service';
+import { VectorStoreService } from './services/vector-store.service';
+import { RagService } from './services/rag.service';
 
 @Module({
   controllers: [FirstAidController],
@@ -11,6 +13,8 @@ import { OpenAiService } from './services/openai.service';
     FirstAidService,
     GeocodingService,
     EmergencyContactService,
+    VectorStoreService,
+    RagService,
     OpenAiService,
   ],
   exports: [GeocodingService, EmergencyContactService],
