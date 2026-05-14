@@ -208,6 +208,9 @@ export class AuthService {
       (await this.usersService.findByEmail(email));
 
     if (existingUser) {
+      if (!existingUser.googleId) {
+        await this.usersService.linkGoogleId(existingUser.id, googleId);
+      }
       const tokens = this.generateTokens(existingUser.id, existingUser.email);
       await this.usersService.updateRefreshToken(
         existingUser.id,
