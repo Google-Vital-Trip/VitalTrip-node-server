@@ -11,6 +11,7 @@ datasource db {
 enum Provider {
   LOCAL
   GOOGLE
+  APPLE
 }
 
 enum UserRole {
@@ -24,6 +25,7 @@ model User {
   name            String   @db.VarChar(100)
   password        String?  @db.VarChar(255)
   googleId        String?  @unique @db.VarChar(255)
+  appleId         String?  @unique @db.VarChar(255)
   birthDate       String   @db.VarChar(10)
   countryCode     String   @db.VarChar(10)
   phoneNumber     String   @db.VarChar(20)
