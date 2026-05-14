@@ -281,11 +281,11 @@ export class AuthService {
   }
 
   async appleLogin(appleId: string, email: string | null, name: string | null) {
-    const existingUser = await this.usersService.findByAppleId(appleId);
+    const existingByAppleId = await this.usersService.findByAppleId(appleId);
 
-    if (existingUser) {
-      const tokens = this.generateTokens(existingUser.id, existingUser.email);
-      await this.usersService.updateRefreshToken(existingUser.id, tokens.refreshToken);
+    if (existingByAppleId) {
+      const tokens = this.generateTokens(existingByAppleId.id, existingByAppleId.email);
+      await this.usersService.updateRefreshToken(existingByAppleId.id, tokens.refreshToken);
       return { ...tokens, isNewUser: false };
     }
 
@@ -294,6 +294,14 @@ export class AuthService {
         message: '최초 Apple 로그인 시 email과 name이 필요합니다.',
         errorCode: ErrorCode.VALIDATION_FAILED,
       });
+    }
+
+    const existingByEmail = await this.usersService.findByEmail(email);
+    if (existingByEmail) {
+      await this.usersService.linkAppleId(existingByEmail.id, appleId);
+      const tokens = this.generateTokens(existingByEmail.id, existingByEmail.email);
+      await this.usersService.updateRefreshToken(existingByEmail.id, tokens.refreshToken);
+      return { ...tokens, isNewUser: false };
     }
 
     const newUser = await this.usersService.createAppleUser({ appleId, email, name });

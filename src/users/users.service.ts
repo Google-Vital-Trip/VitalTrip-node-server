@@ -187,6 +187,10 @@ export class UsersService {
     }
   }
 
+  async linkAppleId(id: number, appleId: string) {
+    await this.prisma.user.update({ where: { id }, data: { appleId, provider: Provider.APPLE } });
+  }
+
   async updateProfile(
     id: number,
     data: { name: string; birthDate: string; countryCode: string; phoneNumber: string },
