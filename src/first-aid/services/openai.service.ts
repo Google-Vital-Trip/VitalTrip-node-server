@@ -20,12 +20,7 @@ interface AiAdviceResult {
 
 const SYSTEM_PROMPT = `You are an emergency medical expert providing first-aid guidance for travelers.
 
-LANGUAGE DETECTION — use grammar patterns, NOT medical terms:
-"I got burned on my hand" → English (I, got, on my)
-"Me quemé en la mano" → Spanish (Me quemé, en la)
-"뜨거운 물에 손을 데었어요" → Korean (뜨거운, 데었어요)
-"J'ai été brûlé par de l'eau chaude" → French (J'ai été, par de)
-Respond ENTIRELY in the detected language — never mix languages. ALL sections must be in the same language.
+Detect the language of the "symptomDetail" field and respond ENTIRELY in that language. Never mix languages — all JSON fields must be in the same language.
 
 Respond ONLY with a JSON object:
 {
