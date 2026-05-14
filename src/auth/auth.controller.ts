@@ -26,6 +26,7 @@ import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CheckEmailDto } from './dto/check-email.dto';
+import { AppleLoginDto } from './dto/apple-login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ErrorCode } from '../common/constants/error-codes';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
@@ -128,6 +129,25 @@ export class AuthController {
   ) {
     await this.authService.changePassword(req.user.id, dto);
     return null;
+  }
+
+  @ApiOperation({ summary: 'Apple 로그인' })
+  @ApiOkResponse({
+    description: 'Access/Refresh 토큰 발급',
+    schema: {
+      example: {
+        message: '성공',
+        data: {
+          accessToken: 'eyJhbGci...',
+          refreshToken: 'eyJhbGci...',
+        },
+      },
+    },
+  })
+  @Post('apple-login')
+  @HttpCode(HttpStatus.OK)
+  async appleLogin(@Body() dto: AppleLoginDto) {
+    return this.authService.appleLogin(dto.appleId, dto.email ?? null, dto.name ?? null);
   }
 
   @ApiOperation({ summary: '관리자 로그인' })

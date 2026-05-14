@@ -280,6 +280,28 @@ export class AuthService {
     };
   }
 
+  async appleLogin(appleId: string, email: string | null, name: string | null) {
+    const existingUser = await this.usersService.findByAppleId(appleId);
+
+    if (existingUser) {
+      const tokens = this.generateTokens(existingUser.id, existingUser.email);
+      await this.usersService.updateRefreshToken(existingUser.id, tokens.refreshToken);
+      return tokens;
+    }
+
+    if (!email || !name) {
+      throw new BadRequestException({
+        message: '최초 Apple 로그인 시 email과 name이 필요합니다.',
+        errorCode: ErrorCode.VALIDATION_FAILED,
+      });
+    }
+
+    const newUser = await this.usersService.createAppleUser({ appleId, email, name });
+    const tokens = this.generateTokens(newUser.id, newUser.email);
+    await this.usersService.updateRefreshToken(newUser.id, tokens.refreshToken);
+    return tokens;
+  }
+
   async adminLogin(
     email: string,
     password: string,
