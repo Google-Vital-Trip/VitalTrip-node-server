@@ -18,9 +18,20 @@ interface AiAdviceResult {
   blogLinks: string[];
 }
 
+function detectLanguage(text: string): string {
+  if (/[가-힣]/.test(text)) return 'Korean';
+  if (/[ぁ-んァ-ン]/.test(text)) return 'Japanese';
+  if (/[一-龯]/.test(text)) return 'Chinese';
+  if (/[؀-ۿ]/.test(text)) return 'Arabic';
+  if (/[Ѐ-ӿ]/.test(text)) return 'Russian';
+  if (/[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞŸ]/.test(text))
+    return 'European (Spanish/French/German/Italian/Portuguese)';
+  return 'English';
+}
+
 const SYSTEM_PROMPT = `You are an emergency medical expert providing first-aid guidance for travelers.
 
-Detect the language of the "symptomDetail" field and respond ENTIRELY in that language. Never mix languages — all JSON fields must be in the same language.
+You MUST respond ENTIRELY in the language specified by the "responseLanguage" field. Never mix languages — all JSON fields must be written in that language.
 
 Respond ONLY with a JSON object:
 {
@@ -83,6 +94,8 @@ export class OpenAiService {
     countryCode: string,
   ): Promise<AiAdviceResult> {
     try {
+      const responseLanguage = detectLanguage(symptomDetail);
+
       const ragContext = await this.ragService.findRelevantDocuments(
         `${symptomType} ${symptomDetail}`,
       );
@@ -99,6 +112,7 @@ export class OpenAiService {
           {
             role: 'user',
             content: [
+              `responseLanguage: ${responseLanguage}`,
               `symptomType: ${symptomType}`,
               `symptomDetail: ${symptomDetail}`,
               `countryCode: ${countryCode}`,
