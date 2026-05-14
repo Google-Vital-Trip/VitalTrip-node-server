@@ -286,7 +286,7 @@ export class AuthService {
     if (existingUser) {
       const tokens = this.generateTokens(existingUser.id, existingUser.email);
       await this.usersService.updateRefreshToken(existingUser.id, tokens.refreshToken);
-      return tokens;
+      return { ...tokens, isNewUser: false };
     }
 
     if (!email || !name) {
@@ -299,7 +299,7 @@ export class AuthService {
     const newUser = await this.usersService.createAppleUser({ appleId, email, name });
     const tokens = this.generateTokens(newUser.id, newUser.email);
     await this.usersService.updateRefreshToken(newUser.id, tokens.refreshToken);
-    return tokens;
+    return { ...tokens, isNewUser: true };
   }
 
   async adminLogin(
