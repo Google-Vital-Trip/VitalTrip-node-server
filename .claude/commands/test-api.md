@@ -3,6 +3,7 @@
 인자: $ARGUMENTS (테스트할 엔드포인트, 예: first-aid)
 
 **first-aid** — 응급처치 조언 (인증 불필요)
+
 ```bash
 curl -s -X POST http://localhost:3000/api/first-aid/advice \
   -H "Content-Type: application/json" \
@@ -15,6 +16,7 @@ curl -s -X POST http://localhost:3000/api/first-aid/advice \
 ```
 
 **register** — 회원가입
+
 ```bash
 curl -s -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -22,6 +24,7 @@ curl -s -X POST http://localhost:3000/api/auth/register \
 ```
 
 **login** — 로그인
+
 ```bash
 curl -s -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -29,6 +32,7 @@ curl -s -X POST http://localhost:3000/api/auth/login \
 ```
 
 **validation-error** — 유효성 검사 실패 응답 확인
+
 ```bash
 curl -s -X POST http://localhost:3000/api/first-aid/advice \
   -H "Content-Type: application/json" \
