@@ -115,6 +115,54 @@ export class UsersService {
     });
   }
 
+  async findByAppleId(appleId: string) {
+    return this.prisma.user.findUnique({
+      where: { appleId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        googleId: true,
+        appleId: true,
+        birthDate: true,
+        countryCode: true,
+        phoneNumber: true,
+        profileImageUrl: true,
+        provider: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async createAppleUser(data: {
+    appleId: string;
+    email: string;
+    name: string;
+  }) {
+    try {
+      return await this.prisma.user.create({
+        data: {
+          ...data,
+          password: null,
+          provider: Provider.APPLE,
+          birthDate: '',
+          countryCode: '',
+          phoneNumber: '',
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException({
+          message: '이미 사용 중인 이메일입니다.',
+          errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
+        });
+      }
+      throw e;
+    }
+  }
+
   async createGoogleUser(data: {
     email: string;
     name: string;
