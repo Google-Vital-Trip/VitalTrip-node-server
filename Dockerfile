@@ -8,6 +8,7 @@ COPY . .
 RUN pnpm prisma:generate
 RUN pnpm build
 RUN pnpm exec tsc -p scripts/tsconfig.json
+RUN pnpm exec tsc -p prisma/tsconfig.json
 
 FROM node:20-slim AS production
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
@@ -17,6 +18,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/dist-scripts ./dist-scripts
+COPY --from=builder /app/dist-prisma ./dist-prisma
 COPY --from=builder /app/src/first-aid/knowledge-base/documents ./src/first-aid/knowledge-base/documents
 COPY prisma ./prisma
 RUN pnpm prisma:generate
