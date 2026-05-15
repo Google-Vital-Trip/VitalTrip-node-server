@@ -32,6 +32,6 @@ export class EncyclopediaController {
   })
   @Get()
   getTopics(@Query() query: EncyclopediaQueryDto) {
-    return this.encyclopediaService.getTopics(query.search);
+    return this.encyclopediaService.getTopics(query.search, query.offset, query.limit);
   }
 }

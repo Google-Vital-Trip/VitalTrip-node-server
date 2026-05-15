@@ -16,6 +16,8 @@ export class EncyclopediaService {
 
   async getTopics(
     search?: string,
+    offset = 0,
+    limit = 50,
   ): Promise<{ total: number; items: HealthTopicItem[] }> {
     const keyword = search?.trim();
     const where = keyword
@@ -40,7 +42,8 @@ export class EncyclopediaService {
           url: true,
         },
         orderBy: { title: 'asc' },
-        take: 100,
+        skip: offset,
+        take: limit,
       }),
     ]);
 
