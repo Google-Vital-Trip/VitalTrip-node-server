@@ -25,5 +25,5 @@ jobs:
             POINT_COUNT=$(curl -sf http://localhost:6333/collections/first_aid | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "0")
             if [ "$DOCS_CHANGED" -gt 0 ] || [ "$POINT_COUNT" -eq 0 ]; then
               echo "Running seed:vectors (docs_changed=$DOCS_CHANGED, points=$POINT_COUNT)"
-              docker compose exec -T app pnpm seed:vectors
+              docker compose exec -T app pnpm seed:vectors:prod
             fi

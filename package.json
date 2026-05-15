@@ -24,6 +24,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed:vectors": "ts-node -P scripts/tsconfig.json scripts/generate-vectors.ts",
+    "seed:vectors:prod": "node dist-scripts/generate-vectors.js",
     "measure:rag": "ts-node -P scripts/tsconfig.json scripts/measure-rag.ts",
     "measure:quality": "ts-node -P scripts/tsconfig.json scripts/measure-quality.ts"
   },
