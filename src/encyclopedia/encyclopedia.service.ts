@@ -22,6 +22,7 @@ export class EncyclopediaService implements OnModuleInit {
     void this.loadAll();
   }
 
+
   async getConditions(
     search?: string,
   ): Promise<{ total: number; items: EncyclopediaItem[] }> {
