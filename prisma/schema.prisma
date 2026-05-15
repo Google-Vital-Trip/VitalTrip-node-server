@@ -19,6 +19,19 @@ enum UserRole {
   ADMIN
 }
 
+model HealthTopic {
+  id          Int    @id @default(autoincrement())
+  title       String @db.VarChar(255)
+  altTitles   String @db.Text
+  summary     String @db.Text
+  fullSummary String @db.LongText
+  categories  String @db.Text
+  meshTerms   String @db.Text
+  url         String @unique @db.VarChar(500)
+
+  @@map("health_topics")
+}
+
 model User {
   id              Int      @id @default(autoincrement())
   email           String   @unique @db.VarChar(255)

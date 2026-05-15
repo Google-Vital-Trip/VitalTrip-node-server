@@ -1,70 +1,56 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
-export interface EncyclopediaItem {
-  id: string;
-  name: string;
-  icdCodes: string[];
+export interface HealthTopicItem {
+  id: number;
+  title: string;
+  altTitles: string[];
+  summary: string;
+  categories: string[];
+  url: string;
 }
 
-// NIH API: [total, codes[], extraFields | null, rows[][]]
-type NihResponse = [number, string[], Record<string, (string[] | null)[]> | null, string[][]];
-
 @Injectable()
-export class EncyclopediaService implements OnModuleInit {
-  private readonly logger = new Logger(EncyclopediaService.name);
-  private readonly NIH_API = 'https://clinicaltables.nlm.nih.gov/api/conditions/v3/search';
-  private readonly CACHE_TTL = 24 * 60 * 60 * 1000;
+export class EncyclopediaService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  private cache: { items: EncyclopediaItem[]; cachedAt: number } | null = null;
-
-  onModuleInit() {
-    void this.loadAll();
-  }
-
-
-  async getConditions(
+  async getTopics(
     search?: string,
-  ): Promise<{ total: number; items: EncyclopediaItem[] }> {
-    const all = await this.loadAll();
+  ): Promise<{ total: number; items: HealthTopicItem[] }> {
+    const keyword = search?.trim();
+    const where = keyword
+      ? {
+          OR: [
+            { title: { contains: keyword } },
+            { altTitles: { contains: keyword } },
+          ],
+        }
+      : {};
 
-    if (!search?.trim()) {
-      return { total: all.length, items: all };
-    }
+    const [total, rows] = await Promise.all([
+      this.prisma.healthTopic.count({ where }),
+      this.prisma.healthTopic.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          altTitles: true,
+          summary: true,
+          categories: true,
+          url: true,
+        },
+        orderBy: { title: 'asc' },
+        take: 100,
+      }),
+    ]);
 
-    const keyword = search.trim().toLowerCase();
-    const filtered = all.filter((item) =>
-      item.name.toLowerCase().includes(keyword),
-    );
-    return { total: filtered.length, items: filtered };
-  }
-
-  private async loadAll(): Promise<EncyclopediaItem[]> {
-    if (this.cache && Date.now() - this.cache.cachedAt < this.CACHE_TTL) {
-      return this.cache.items;
-    }
-
-    try {
-      const { data } = await axios.get<NihResponse>(this.NIH_API, {
-        params: { terms: '', maxList: 500, ef: 'icd10cm_codes' },
-        timeout: 10000,
-      });
-
-      const [, , extraFields, rows] = data;
-      const icdMap = extraFields?.icd10cm_codes ?? [];
-
-      const items: EncyclopediaItem[] = rows.map((row, i) => ({
-        id: `condition-${i}`,
-        name: row[0],
-        icdCodes: icdMap[i] ?? [],
-      }));
-
-      this.cache = { items, cachedAt: Date.now() };
-      this.logger.log(`NIH 데이터 캐싱 완료: ${items.length}개`);
-      return items;
-    } catch (error) {
-      this.logger.error(`NIH API 호출 실패: ${(error as Error).message}`);
-      return this.cache?.items ?? [];
-    }
+    return {
+      total,
+      items: rows.map((r): HealthTopicItem => ({
+        ...r,
+        altTitles: JSON.parse(r.altTitles) as string[],
+        categories: JSON.parse(r.categories) as string[],
+      })),
+    };
   }
 }
