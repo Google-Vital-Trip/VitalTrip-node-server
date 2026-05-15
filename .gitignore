@@ -32,3 +32,4 @@ coverage/
 
 # nest
 .nest/
+src/first-aid/knowledge-base/vectors.json

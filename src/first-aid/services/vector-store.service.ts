@@ -1,50 +1,53 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { ConfigService } from '@nestjs/config';
+import { QdrantClient } from '@qdrant/js-client-rest';
 
 export interface VectorDocument {
   id: string;
   symptomType: string;
   text: string;
-  vector: number[];
 }
+
+const COLLECTION_NAME = 'first_aid';
+const VECTOR_SIZE = 1536;
 
 @Injectable()
 export class VectorStoreService implements OnModuleInit {
   private readonly logger = new Logger(VectorStoreService.name);
-  private documents: VectorDocument[] = [];
+  readonly client: QdrantClient;
 
-  private get vectorsPath(): string {
-    return path.resolve(process.cwd(), 'src/first-aid/knowledge-base/vectors.json');
+  constructor(private readonly config: ConfigService) {
+    this.client = new QdrantClient({
+      url: this.config.get<string>('QDRANT_URL', 'http://localhost:6333'),
+    });
   }
 
-  onModuleInit() {
-    if (!fs.existsSync(this.vectorsPath)) {
-      this.logger.warn('vectors.json not found. Run "pnpm seed:vectors" to generate.');
-      return;
+  async onModuleInit() {
+    try {
+      const { collections } = await this.client.getCollections();
+      const exists = collections.some((c) => c.name === COLLECTION_NAME);
+
+      if (!exists) {
+        await this.client.createCollection(COLLECTION_NAME, {
+          vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
+        });
+        this.logger.warn(`Collection "${COLLECTION_NAME}" created. Run "pnpm seed:vectors" to populate.`);
+      } else {
+        const info = await this.client.getCollection(COLLECTION_NAME);
+        this.logger.log(`Qdrant connected — "${COLLECTION_NAME}" (${info.points_count} points)`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to connect to Qdrant: ${(error as Error).message}`);
     }
-    const raw = fs.readFileSync(this.vectorsPath, 'utf-8');
-    this.documents = JSON.parse(raw) as VectorDocument[];
-    this.logger.log(`Loaded ${this.documents.length} documents into vector store`);
   }
 
-  search(queryVector: number[], topK = 3): VectorDocument[] {
-    if (this.documents.length === 0) return [];
+  async search(queryVector: number[], topK = 3): Promise<VectorDocument[]> {
+    const results = await this.client.search(COLLECTION_NAME, {
+      vector: queryVector,
+      limit: topK,
+      with_payload: true,
+    });
 
-    return this.documents
-      .map((doc) => ({ doc, score: this.cosineSimilarity(queryVector, doc.vector) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK)
-      .map(({ doc }) => doc);
-  }
-
-  private cosineSimilarity(a: number[], b: number[]): number {
-    let dot = 0, magA = 0, magB = 0;
-    for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      magA += a[i] * a[i];
-      magB += b[i] * b[i];
-    }
-    return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+    return results.map((r) => r.payload as unknown as VectorDocument);
   }
 }

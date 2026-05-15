@@ -22,7 +22,7 @@ export class RagService {
         input: query,
       });
       const queryVector = response.data[0].embedding;
-      const docs = this.vectorStore.search(queryVector, topK);
+      const docs = await this.vectorStore.search(queryVector, topK);
 
       if (docs.length === 0) return '';
 
