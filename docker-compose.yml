@@ -34,7 +34,7 @@ services:
       db:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
 
   nginx:
     image: nginx:latest
