@@ -2,11 +2,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
+import { QdrantClient } from '@qdrant/js-client-rest';
 
 dotenv.config();
 
 const DOCS_DIR = path.resolve(__dirname, '../src/first-aid/knowledge-base/documents');
-const OUTPUT_PATH = path.resolve(__dirname, '../src/first-aid/knowledge-base/vectors.json');
+const COLLECTION_NAME = 'first_aid';
+const VECTOR_SIZE = 1536;
 
 const SYMPTOM_TYPE_MAP: Record<string, string> = {
   'bleeding-mild': 'BLEEDING',
@@ -54,13 +56,28 @@ async function main() {
     process.exit(1);
   }
 
-  const client = new OpenAI({ apiKey });
-  const files = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith('.md'));
-  const results = [];
+  const qdrantUrl = process.env.QDRANT_URL ?? 'http://localhost:6333';
+  const openai = new OpenAI({ apiKey });
+  const qdrant = new QdrantClient({ url: qdrantUrl });
 
+  const { collections } = await qdrant.getCollections();
+  const exists = collections.some((c) => c.name === COLLECTION_NAME);
+  if (exists) {
+    await qdrant.deleteCollection(COLLECTION_NAME);
+    console.log(`Dropped existing collection "${COLLECTION_NAME}"`);
+  }
+  await qdrant.createCollection(COLLECTION_NAME, {
+    vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
+  });
+  console.log(`Created collection "${COLLECTION_NAME}"\n`);
+
+  const files = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith('.md'));
   console.log(`Found ${files.length} documents. Generating embeddings...\n`);
 
-  for (const file of files) {
+  const points: { id: number; vector: number[]; payload: Record<string, string> }[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     const id = file.replace('.md', '');
     const symptomType = SYMPTOM_TYPE_MAP[id];
 
@@ -70,24 +87,22 @@ async function main() {
     }
 
     const text = fs.readFileSync(path.join(DOCS_DIR, file), 'utf-8');
-
-    const response = await client.embeddings.create({
+    const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: text,
     });
 
-    results.push({
-      id,
-      symptomType,
-      text,
+    points.push({
+      id: i,
       vector: response.data[0].embedding,
+      payload: { id, symptomType, text },
     });
 
     console.log(`✓ ${id} (${symptomType})`);
   }
 
-  fs.writeFileSync(OUTPUT_PATH, JSON.stringify(results, null, 2));
-  console.log(`\nSaved ${results.length} vectors to ${OUTPUT_PATH}`);
+  await qdrant.upsert(COLLECTION_NAME, { points });
+  console.log(`\nUpserted ${points.length} vectors to Qdrant (${qdrantUrl})`);
 }
 
 main().catch((err) => {
