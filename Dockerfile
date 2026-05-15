@@ -17,6 +17,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/dist-scripts ./dist-scripts
+COPY --from=builder /app/src/first-aid/knowledge-base/documents ./src/first-aid/knowledge-base/documents
 COPY prisma ./prisma
 RUN pnpm prisma:generate
 EXPOSE 3000
