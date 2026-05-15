@@ -4,23 +4,8 @@ import axios from 'axios';
 const prisma = new PrismaClient();
 
 const API = 'https://wsearch.nlm.nih.gov/ws/query';
-const TARGET = 500;
-const RETMAX = 50;
-const DELAY_MS = 800;
-
-const TERMS = [
-  'first aid', 'emergency', 'injury', 'wound', 'burn', 'fracture', 'bleeding',
-  'poisoning', 'choking', 'shock', 'concussion',
-  'infection', 'bacteria', 'virus', 'fever', 'malaria', 'hepatitis', 'typhoid',
-  'heart', 'lung', 'brain', 'liver', 'kidney', 'skin', 'eye', 'ear', 'bone',
-  'blood', 'muscle', 'digestive', 'respiratory', 'immune', 'joint',
-  'diabetes', 'cancer', 'allergy', 'asthma', 'arthritis', 'hypertension',
-  'stroke', 'headache', 'pain', 'anxiety', 'depression', 'obesity',
-  'nausea', 'dizziness', 'fatigue', 'rash', 'swelling', 'seizure', 'cough',
-  'heat illness', 'altitude', 'cold', 'food', 'insect', 'bite',
-  'nutrition', 'sleep', 'pregnancy', 'child', 'surgery', 'vaccine',
-  'dental', 'spine', 'nerve', 'stomach', 'thyroid', 'hormones',
-];
+const RETMAX = 500;
+const DELAY_MS = 1000;
 
 interface Topic {
   url: string;
@@ -58,6 +43,11 @@ function getFields(body: string, name: string): string[] {
   return out;
 }
 
+function getTotalCount(xml: string): number {
+  const m = /<count>(\d+)<\/count>/.exec(xml);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
 function parseXml(xml: string): Topic[] {
   const docRe = /<document rank="\d+" url="([^"]+)">([\s\S]*?)<\/document>/g;
   const topics: Topic[] = [];
@@ -81,13 +71,13 @@ function parseXml(xml: string): Topic[] {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchTopics(term: string): Promise<Topic[]> {
+async function fetchPage(retstart: number): Promise<{ total: number; topics: Topic[] }> {
   const { data } = await axios.get<string>(API, {
-    params: { db: 'healthTopics', term, retmax: RETMAX },
+    params: { db: 'healthTopics', term: 'a', retmax: RETMAX, retstart },
     responseType: 'text',
-    timeout: 15000,
+    timeout: 30000,
   });
-  return parseXml(data);
+  return { total: getTotalCount(data), topics: parseXml(data) };
 }
 
 async function main() {
@@ -100,21 +90,32 @@ async function main() {
   const seen = new Set<string>();
   const collected: Topic[] = [];
 
-  for (const term of TERMS) {
-    if (collected.length >= TARGET) break;
-    try {
-      process.stdout.write(`[${collected.length}/${TARGET}] "${term}" 검색 중...\r`);
-      const topics = await fetchTopics(term);
-      for (const t of topics) {
-        if (seen.has(t.url)) continue;
+  console.log('첫 번째 페이지 요청 중...');
+  const first = await fetchPage(0);
+  const total = first.total;
+  console.log(`전체 health topic 수: ${total}개`);
+
+  for (const t of first.topics) {
+    if (!seen.has(t.url)) {
+      seen.add(t.url);
+      collected.push(t);
+    }
+  }
+  console.log(`[${collected.length}/${total}] 수집 완료`);
+
+  let retstart = RETMAX;
+  while (retstart < total) {
+    await sleep(DELAY_MS);
+    console.log(`페이지 요청 중... (retstart=${retstart})`);
+    const page = await fetchPage(retstart);
+    for (const t of page.topics) {
+      if (!seen.has(t.url)) {
         seen.add(t.url);
         collected.push(t);
-        if (collected.length >= TARGET) break;
       }
-    } catch (e) {
-      console.error(`\n"${term}" 실패: ${(e as Error).message}`);
     }
-    await sleep(DELAY_MS);
+    retstart += RETMAX;
+    console.log(`[${collected.length}/${total}] 수집 완료`);
   }
 
   console.log(`\n총 ${collected.length}개 DB에 저장 중...`);
