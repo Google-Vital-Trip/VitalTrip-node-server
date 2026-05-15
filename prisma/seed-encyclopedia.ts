@@ -36,7 +36,7 @@ function clean(raw: string): string {
 }
 
 function getFields(body: string, name: string): string[] {
-  const re = new RegExp(`<content name="${name}">([\s\S]*?)<\\/content>`, 'g');
+  const re = new RegExp(`<content name="${name}">([\\s\\S]*?)<\\/content>`, 'g');
   const out: string[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(body)) !== null) out.push(m[1]);
