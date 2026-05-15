@@ -29,6 +29,7 @@ model HealthTopic {
   meshTerms   String @db.Text
   url         String @unique @db.VarChar(500)
 
+  @@index([title])
   @@map("health_topics")
 }
 
