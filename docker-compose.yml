@@ -13,6 +13,17 @@ services:
       timeout: 5s
       retries: 5
 
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ['CMD', 'bash', '-c', 'curl -sf http://localhost:6333/healthz || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     restart: always
@@ -20,11 +31,14 @@ services:
       - .env
     environment:
       DB_HOST: db
+      QDRANT_URL: http://qdrant:6333
     dns:
       - 8.8.8.8
       - 8.8.4.4
     depends_on:
       db:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
 
   nginx:
@@ -41,3 +55,4 @@ services:
 
 volumes:
   mysql_data:
+  qdrant_data:
