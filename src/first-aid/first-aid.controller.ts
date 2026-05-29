@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FirstAidService } from './first-aid.service';
 import { AdviceRequestDto } from './dto/advice-request.dto';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 @ApiTags('First Aid')
 @Controller('first-aid')
@@ -33,8 +34,9 @@ export class FirstAidController {
       },
     },
   })
+  @UseGuards(OptionalJwtAuthGuard)
   @Post('advice')
-  getAdvice(@Body() dto: AdviceRequestDto) {
-    return this.firstAidService.getAdvice(dto);
+  getAdvice(@Body() dto: AdviceRequestDto, @Request() req: { user?: { sub: number } }) {
+    return this.firstAidService.getAdvice(dto, req.user?.sub);
   }
 }
