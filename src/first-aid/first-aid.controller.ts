@@ -36,7 +36,10 @@ export class FirstAidController {
   })
   @UseGuards(OptionalJwtAuthGuard)
   @Post('advice')
-  getAdvice(@Body() dto: AdviceRequestDto, @Request() req: { user?: { sub: number } }) {
+  getAdvice(
+    @Body() dto: AdviceRequestDto,
+    @Request() req: { user?: { sub: number } },
+  ) {
     return this.firstAidService.getAdvice(dto, req.user?.sub);
   }
 }

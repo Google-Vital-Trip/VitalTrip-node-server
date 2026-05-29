@@ -147,7 +147,11 @@ export class AuthController {
   @Post('apple-login')
   @HttpCode(HttpStatus.OK)
   async appleLogin(@Body() dto: AppleLoginDto) {
-    return this.authService.appleLogin(dto.appleId, dto.email ?? null, dto.name ?? null);
+    return this.authService.appleLogin(
+      dto.appleId,
+      dto.email ?? null,
+      dto.name ?? null,
+    );
   }
 
   @ApiOperation({ summary: '관리자 로그인' })

@@ -24,7 +24,9 @@ function detectLanguage(text: string): string {
   if (/[一-龯]/.test(text)) return 'Chinese';
   if (/[؀-ۿ]/.test(text)) return 'Arabic';
   if (/[Ѐ-ӿ]/.test(text)) return 'Russian';
-  if (/[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞŸ]/.test(text))
+  if (
+    /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞŸ]/.test(text)
+  )
     return 'European (Spanish/French/German/Italian/Portuguese)';
   return 'English';
 }

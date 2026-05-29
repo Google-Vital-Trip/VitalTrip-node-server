@@ -19,7 +19,10 @@ export class UsersService {
     try {
       return await this.prisma.user.create({ data });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
         throw new ConflictException({
           message: '이미 사용 중인 이메일입니다.',
           errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
@@ -63,11 +66,17 @@ export class UsersService {
 
   async updateRefreshToken(id: number, refreshToken: string | null) {
     const hashed = refreshToken ? await bcrypt.hash(refreshToken, 10) : null;
-    await this.prisma.user.update({ where: { id }, data: { refreshToken: hashed } });
+    await this.prisma.user.update({
+      where: { id },
+      data: { refreshToken: hashed },
+    });
   }
 
   async updatePassword(id: number, hashedPassword: string) {
-    await this.prisma.user.update({ where: { id }, data: { password: hashedPassword } });
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
   }
 
   async existsByEmail(email: string) {
@@ -153,7 +162,10 @@ export class UsersService {
         },
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
         throw new ConflictException({
           message: '이미 사용 중인 이메일입니다.',
           errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
@@ -177,7 +189,10 @@ export class UsersService {
         data: { ...data, password: null, provider: Provider.GOOGLE },
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
         throw new ConflictException({
           message: '이미 사용 중인 이메일입니다.',
           errorCode: ErrorCode.EMAIL_ALREADY_EXISTS,
@@ -197,7 +212,12 @@ export class UsersService {
 
   async updateProfile(
     id: number,
-    data: { name: string; birthDate: string; countryCode: string; phoneNumber: string },
+    data: {
+      name: string;
+      birthDate: string;
+      countryCode: string;
+      phoneNumber: string;
+    },
   ) {
     await this.prisma.user.update({ where: { id }, data });
   }

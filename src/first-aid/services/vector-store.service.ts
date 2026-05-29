@@ -31,13 +31,19 @@ export class VectorStoreService implements OnModuleInit {
         await this.client.createCollection(COLLECTION_NAME, {
           vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
         });
-        this.logger.warn(`Collection "${COLLECTION_NAME}" created. Run "pnpm seed:vectors" to populate.`);
+        this.logger.warn(
+          `Collection "${COLLECTION_NAME}" created. Run "pnpm seed:vectors" to populate.`,
+        );
       } else {
         const info = await this.client.getCollection(COLLECTION_NAME);
-        this.logger.log(`Qdrant connected — "${COLLECTION_NAME}" (${info.points_count} points)`);
+        this.logger.log(
+          `Qdrant connected — "${COLLECTION_NAME}" (${info.points_count} points)`,
+        );
       }
     } catch (error) {
-      this.logger.error(`Failed to connect to Qdrant: ${(error as Error).message}`);
+      this.logger.error(
+        `Failed to connect to Qdrant: ${(error as Error).message}`,
+      );
     }
   }
 

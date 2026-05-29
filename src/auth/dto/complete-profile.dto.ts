@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsDateString,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CompleteProfileDto {
   @ApiProperty({ example: '홍길동', description: '이름 (1~100자)' })
@@ -18,8 +24,13 @@ export class CompleteProfileDto {
   @MaxLength(10)
   countryCode: string;
 
-  @ApiProperty({ example: '+821012345678', description: '전화번호 (E.164 형식)' })
+  @ApiProperty({
+    example: '+821012345678',
+    description: '전화번호 (E.164 형식)',
+  })
   @IsString()
-  @Matches(/^\+?[1-9]\d{1,14}$/, { message: '올바른 전화번호 형식이 아닙니다.' })
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: '올바른 전화번호 형식이 아닙니다.',
+  })
   phoneNumber: string;
 }
