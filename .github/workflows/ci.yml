@@ -10,6 +10,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: vitaltrip_test
+          MYSQL_DATABASE: vitaltrip_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,3 +62,25 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Run E2E migrations
+        run: pnpm prisma:deploy
+        env:
+          DATABASE_URL: mysql://root:vitaltrip_test@127.0.0.1:3306/vitaltrip_test
+
+      - name: E2E Test
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: mysql://root:vitaltrip_test@127.0.0.1:3306/vitaltrip_test
+          JWT_SECRET: ci-jwt-secret
+          JWT_EXPIRES_IN: 1h
+          JWT_REFRESH_SECRET: ci-jwt-refresh-secret
+          JWT_REFRESH_EXPIRES_IN: 30d
+          OPENAI_API_KEY: test-key
+          GOOGLE_CLIENT_ID: test-client-id
+          GOOGLE_CLIENT_SECRET: test-client-secret
+          GOOGLE_CALLBACK_URL: http://localhost:3000/api/auth/google/callback
+          FRONTEND_URL: http://localhost:3001
+          QDRANT_URL: http://localhost:6333
+          GOOGLE_PLACES_API_KEY: test-places-key
+          NODE_ENV: test
