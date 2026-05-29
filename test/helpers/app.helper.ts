@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const cookieParser = require('cookie-parser') as typeof import('cookie-parser');
 import { AppModule } from '../../src/app.module';
@@ -53,7 +54,7 @@ export async function createTestApp(): Promise<INestApplication> {
     .useValue(mockRagService)
     .compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication(new ExpressAdapter());
 
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
