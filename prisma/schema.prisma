@@ -1,5 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -19,6 +20,20 @@ enum UserRole {
   ADMIN
 }
 
+enum SymptomType {
+  BLEEDING
+  BURNS
+  FRACTURE
+  ALLERGIC_REACTION
+  SEIZURE
+  HEATSTROKE
+  HYPOTHERMIA
+  POISONING
+  BREATHING_DIFFICULTY
+  ANIMAL_BITE
+  FALL_INJURY
+}
+
 model HealthTopic {
   id          Int    @id @default(autoincrement())
   title       String @db.VarChar(255)
@@ -31,6 +46,22 @@ model HealthTopic {
 
   @@index([title])
   @@map("health_topics")
+}
+
+model FirstAidLog {
+  id          Int         @id @default(autoincrement())
+  userId      Int?
+  symptomType SymptomType
+  countryCode String      @db.VarChar(10)
+  confidence  Int
+  requestedAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([symptomType])
+  @@index([countryCode])
+  @@index([requestedAt])
+  @@map("first_aid_logs")
 }
 
 model User {
@@ -49,6 +80,8 @@ model User {
   refreshToken    String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  firstAidLogs FirstAidLog[]
 
   @@map("users")
 }

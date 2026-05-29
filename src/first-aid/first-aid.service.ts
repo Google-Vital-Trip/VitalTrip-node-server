@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AdviceRequestDto } from './dto/advice-request.dto';
 import { GeocodingService } from './services/geocoding.service';
 import { EmergencyContactService } from './services/emergency-contact.service';
 import { OpenAiService } from './services/openai.service';
+import {
+  FIRST_AID_ADVICE_COMPLETED,
+  FirstAidAdviceCompletedEvent,
+} from './events/first-aid.events';
 
 @Injectable()
 export class FirstAidService {
@@ -10,9 +15,10 @@ export class FirstAidService {
     private readonly geocodingService: GeocodingService,
     private readonly emergencyContactService: EmergencyContactService,
     private readonly openAiService: OpenAiService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async getAdvice(dto: AdviceRequestDto) {
+  async getAdvice(dto: AdviceRequestDto, userId?: number) {
     const { symptomType, symptomDetail, latitude, longitude } = dto;
 
     const { countryCode, countryName } =
@@ -22,6 +28,13 @@ export class FirstAidService {
       Promise.resolve(this.emergencyContactService.getContacts(countryCode)),
       this.openAiService.getAdvice(symptomType, symptomDetail, countryCode),
     ]);
+
+    const event = new FirstAidAdviceCompletedEvent();
+    event.userId = userId;
+    event.symptomType = symptomType;
+    event.countryCode = countryCode;
+    event.confidence = aiResult.confidence;
+    this.eventEmitter.emit(FIRST_AID_ADVICE_COMPLETED, event);
 
     return {
       content: aiResult.content,
