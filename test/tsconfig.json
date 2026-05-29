@@ -3,8 +3,7 @@
   "compilerOptions": {
     "types": ["jest", "node"],
     "module": "commonjs",
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node10",
     "resolvePackageJsonExports": false,
     "rootDir": "..",
     "noEmit": true
