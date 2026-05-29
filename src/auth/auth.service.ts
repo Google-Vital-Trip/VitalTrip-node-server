@@ -244,7 +244,12 @@ export class AuthService {
     countryCode: string,
     phoneNumber: string,
   ) {
-    let payload: { googleId: string; email: string; profileImageUrl: string | null; type: string };
+    let payload: {
+      googleId: string;
+      email: string;
+      profileImageUrl: string | null;
+      type: string;
+    };
 
     try {
       payload = this.jwtService.verify(tempToken, {
@@ -252,7 +257,8 @@ export class AuthService {
       });
     } catch {
       throw new UnauthorizedException({
-        message: '유효하지 않거나 만료된 토큰입니다. Google 로그인을 다시 시도해주세요.',
+        message:
+          '유효하지 않거나 만료된 토큰입니다. Google 로그인을 다시 시도해주세요.',
         errorCode: ErrorCode.UNAUTHORIZED,
       });
     }
@@ -287,8 +293,14 @@ export class AuthService {
     const existingByAppleId = await this.usersService.findByAppleId(appleId);
 
     if (existingByAppleId) {
-      const tokens = this.generateTokens(existingByAppleId.id, existingByAppleId.email);
-      await this.usersService.updateRefreshToken(existingByAppleId.id, tokens.refreshToken);
+      const tokens = this.generateTokens(
+        existingByAppleId.id,
+        existingByAppleId.email,
+      );
+      await this.usersService.updateRefreshToken(
+        existingByAppleId.id,
+        tokens.refreshToken,
+      );
       return { ...tokens, isNewUser: false };
     }
 
@@ -302,12 +314,22 @@ export class AuthService {
     const existingByEmail = await this.usersService.findByEmail(email);
     if (existingByEmail) {
       await this.usersService.linkAppleId(existingByEmail.id, appleId);
-      const tokens = this.generateTokens(existingByEmail.id, existingByEmail.email);
-      await this.usersService.updateRefreshToken(existingByEmail.id, tokens.refreshToken);
+      const tokens = this.generateTokens(
+        existingByEmail.id,
+        existingByEmail.email,
+      );
+      await this.usersService.updateRefreshToken(
+        existingByEmail.id,
+        tokens.refreshToken,
+      );
       return { ...tokens, isNewUser: false };
     }
 
-    const newUser = await this.usersService.createAppleUser({ appleId, email, name });
+    const newUser = await this.usersService.createAppleUser({
+      appleId,
+      email,
+      name,
+    });
     const tokens = this.generateTokens(newUser.id, newUser.email);
     await this.usersService.updateRefreshToken(newUser.id, tokens.refreshToken);
     return { ...tokens, isNewUser: true };
@@ -354,7 +376,9 @@ export class AuthService {
     return tokens;
   }
 
-  async adminRefresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async adminRefresh(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     let payload: { sub: number; email: string };
 
     try {

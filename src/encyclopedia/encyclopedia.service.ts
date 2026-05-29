@@ -49,11 +49,13 @@ export class EncyclopediaService {
 
     return {
       total,
-      items: rows.map((r): HealthTopicItem => ({
-        ...r,
-        altTitles: JSON.parse(r.altTitles) as string[],
-        categories: JSON.parse(r.categories) as string[],
-      })),
+      items: rows.map(
+        (r): HealthTopicItem => ({
+          ...r,
+          altTitles: JSON.parse(r.altTitles) as string[],
+          categories: JSON.parse(r.categories) as string[],
+        }),
+      ),
     };
   }
 }

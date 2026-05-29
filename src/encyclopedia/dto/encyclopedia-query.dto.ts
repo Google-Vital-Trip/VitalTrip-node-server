@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class EncyclopediaQueryDto {
   @ApiPropertyOptional({ example: 'burn', description: '검색 키워드' })
@@ -16,7 +23,11 @@ export class EncyclopediaQueryDto {
   @Min(0)
   offset?: number = 0;
 
-  @ApiPropertyOptional({ example: 50, description: '반환 개수 (최대 100)', default: 50 })
+  @ApiPropertyOptional({
+    example: 50,
+    description: '반환 개수 (최대 100)',
+    default: 50,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

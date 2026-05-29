@@ -8,7 +8,9 @@ import { EncyclopediaQueryDto } from './dto/encyclopedia-query.dto';
 export class EncyclopediaController {
   constructor(private readonly encyclopediaService: EncyclopediaService) {}
 
-  @ApiOperation({ summary: '건강 백과사전 목록 (MedlinePlus 데이터, 인증 불필요)' })
+  @ApiOperation({
+    summary: '건강 백과사전 목록 (MedlinePlus 데이터, 인증 불필요)',
+  })
   @ApiOkResponse({
     description: '질병·증상·응급처치 건강 주제 목록',
     schema: {
@@ -21,7 +23,8 @@ export class EncyclopediaController {
               id: 1,
               title: 'Burns',
               altTitles: ['Chemical Burns', 'Thermal Burns'],
-              summary: 'Burns are injuries to skin or other tissue caused by heat...',
+              summary:
+                'Burns are injuries to skin or other tissue caused by heat...',
               categories: ['Injuries and Wounds'],
               url: 'https://medlineplus.gov/burns.html',
             },
@@ -32,6 +35,10 @@ export class EncyclopediaController {
   })
   @Get()
   getTopics(@Query() query: EncyclopediaQueryDto) {
-    return this.encyclopediaService.getTopics(query.search, query.offset, query.limit);
+    return this.encyclopediaService.getTopics(
+      query.search,
+      query.offset,
+      query.limit,
+    );
   }
 }

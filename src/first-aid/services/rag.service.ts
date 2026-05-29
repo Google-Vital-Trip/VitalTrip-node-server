@@ -12,7 +12,9 @@ export class RagService {
     private readonly config: ConfigService,
     private readonly vectorStore: VectorStoreService,
   ) {
-    this.client = new OpenAI({ apiKey: this.config.get<string>('OPENAI_API_KEY') });
+    this.client = new OpenAI({
+      apiKey: this.config.get<string>('OPENAI_API_KEY'),
+    });
   }
 
   async findRelevantDocuments(query: string, topK = 2): Promise<string> {
@@ -26,7 +28,9 @@ export class RagService {
 
       if (docs.length === 0) return '';
 
-      return docs.map((doc) => `[${doc.symptomType}]\n${doc.text}`).join('\n\n---\n\n');
+      return docs
+        .map((doc) => `[${doc.symptomType}]\n${doc.text}`)
+        .join('\n\n---\n\n');
     } catch (error) {
       this.logger.error(`RAG retrieval failed: ${(error as Error).message}`);
       return '';
