@@ -105,6 +105,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.[jt]s$": "$1"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
