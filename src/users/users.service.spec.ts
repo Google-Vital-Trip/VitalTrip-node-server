@@ -84,9 +84,11 @@ describe('UsersService', () => {
 
       await service.updateRefreshToken(1, 'raw_token');
 
-      const call = mockPrisma.user.update.mock.calls[0][0] as { data: { refreshToken: string } };
-      expect(call.data.refreshToken).not.toBe('raw_token');
-      expect(call.data.refreshToken).toBeTruthy();
+      const calls = mockPrisma.user.update.mock.calls as Array<
+        [{ data: { refreshToken: string } }]
+      >;
+      expect(calls[0][0].data.refreshToken).not.toBe('raw_token');
+      expect(calls[0][0].data.refreshToken).toBeTruthy();
     });
 
     it('null → bcrypt 없이 null 저장', async () => {
@@ -94,8 +96,10 @@ describe('UsersService', () => {
 
       await service.updateRefreshToken(1, null);
 
-      const call = mockPrisma.user.update.mock.calls[0][0] as { data: { refreshToken: null } };
-      expect(call.data.refreshToken).toBeNull();
+      const calls = mockPrisma.user.update.mock.calls as Array<
+        [{ data: { refreshToken: null } }]
+      >;
+      expect(calls[0][0].data.refreshToken).toBeNull();
     });
   });
 
@@ -113,7 +117,11 @@ describe('UsersService', () => {
 
   describe('createGoogleUser', () => {
     it('provider: GOOGLE, password: null 로 생성', async () => {
-      mockPrisma.user.create.mockResolvedValue({ ...mockUser, provider: Provider.GOOGLE, password: null });
+      mockPrisma.user.create.mockResolvedValue({
+        ...mockUser,
+        provider: Provider.GOOGLE,
+        password: null,
+      });
 
       await service.createGoogleUser({
         email: 'test@example.com',
@@ -125,21 +133,33 @@ describe('UsersService', () => {
         phoneNumber: '+821012345678',
       });
 
-      const call = mockPrisma.user.create.mock.calls[0][0] as { data: { provider: Provider; password: null } };
-      expect(call.data.provider).toBe(Provider.GOOGLE);
-      expect(call.data.password).toBeNull();
+      const calls = mockPrisma.user.create.mock.calls as Array<
+        [{ data: { provider: Provider; password: null } }]
+      >;
+      expect(calls[0][0].data.provider).toBe(Provider.GOOGLE);
+      expect(calls[0][0].data.password).toBeNull();
     });
   });
 
   describe('createAppleUser', () => {
     it('provider: APPLE, password: null 로 생성', async () => {
-      mockPrisma.user.create.mockResolvedValue({ ...mockUser, provider: Provider.APPLE, password: null });
+      mockPrisma.user.create.mockResolvedValue({
+        ...mockUser,
+        provider: Provider.APPLE,
+        password: null,
+      });
 
-      await service.createAppleUser({ appleId: 'apple123', email: 'test@example.com', name: 'Test' });
+      await service.createAppleUser({
+        appleId: 'apple123',
+        email: 'test@example.com',
+        name: 'Test',
+      });
 
-      const call = mockPrisma.user.create.mock.calls[0][0] as { data: { provider: Provider; password: null } };
-      expect(call.data.provider).toBe(Provider.APPLE);
-      expect(call.data.password).toBeNull();
+      const calls = mockPrisma.user.create.mock.calls as Array<
+        [{ data: { provider: Provider; password: null } }]
+      >;
+      expect(calls[0][0].data.provider).toBe(Provider.APPLE);
+      expect(calls[0][0].data.password).toBeNull();
     });
   });
 

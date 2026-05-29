@@ -20,7 +20,12 @@ const mockAiResult = {
   blogLinks: [],
 };
 
-const mockEmergencyContact = { fire: '119', police: '112', medical: '119', general: '112' };
+const mockEmergencyContact = {
+  fire: '119',
+  police: '112',
+  medical: '119',
+  general: '112',
+};
 
 describe('FirstAidService', () => {
   let service: FirstAidService;
@@ -30,7 +35,10 @@ describe('FirstAidService', () => {
       providers: [
         FirstAidService,
         { provide: GeocodingService, useValue: mockGeocodingService },
-        { provide: EmergencyContactService, useValue: mockEmergencyContactService },
+        {
+          provide: EmergencyContactService,
+          useValue: mockEmergencyContactService,
+        },
         { provide: OpenAiService, useValue: mockOpenAiService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
@@ -39,8 +47,13 @@ describe('FirstAidService', () => {
     service = module.get<FirstAidService>(FirstAidService);
     jest.clearAllMocks();
 
-    mockGeocodingService.getCountryInfo.mockResolvedValue({ countryCode: 'KR', countryName: 'South Korea' });
-    mockEmergencyContactService.getContacts.mockReturnValue(mockEmergencyContact);
+    mockGeocodingService.getCountryInfo.mockResolvedValue({
+      countryCode: 'KR',
+      countryName: 'South Korea',
+    });
+    mockEmergencyContactService.getContacts.mockReturnValue(
+      mockEmergencyContact,
+    );
     mockOpenAiService.getAdvice.mockResolvedValue(mockAiResult);
   });
 
@@ -56,7 +69,9 @@ describe('FirstAidService', () => {
 
     expect(result.content).toBe(mockAiResult.content);
     expect(result.identificationResponse.countryCode).toBe('KR');
-    expect(result.identificationResponse.emergencyContact).toEqual(mockEmergencyContact);
+    expect(result.identificationResponse.emergencyContact).toEqual(
+      mockEmergencyContact,
+    );
   });
 
   it('userId 있음 → 이벤트 payload에 userId 포함', async () => {
@@ -78,7 +93,10 @@ describe('FirstAidService', () => {
   });
 
   it('geocoding UNKNOWN 반환 → 정상 응답 (fallback)', async () => {
-    mockGeocodingService.getCountryInfo.mockResolvedValue({ countryCode: 'UNKNOWN', countryName: 'Unknown' });
+    mockGeocodingService.getCountryInfo.mockResolvedValue({
+      countryCode: 'UNKNOWN',
+      countryName: 'Unknown',
+    });
 
     const result = await service.getAdvice(dto);
 

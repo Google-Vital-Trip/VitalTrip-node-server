@@ -8,7 +8,8 @@ const createMockContext = (userRole?: UserRole): ExecutionContext =>
     getHandler: jest.fn(),
     getClass: jest.fn(),
     switchToHttp: () => ({
-      getRequest: () => (userRole ? { user: { role: userRole } } : { user: undefined }),
+      getRequest: () =>
+        userRole ? { user: { role: userRole } } : { user: undefined },
     }),
   }) as unknown as ExecutionContext;
 
@@ -17,7 +18,9 @@ describe('RolesGuard', () => {
   let reflector: jest.Mocked<Reflector>;
 
   beforeEach(() => {
-    reflector = { getAllAndOverride: jest.fn() } as unknown as jest.Mocked<Reflector>;
+    reflector = {
+      getAllAndOverride: jest.fn(),
+    } as unknown as jest.Mocked<Reflector>;
     guard = new RolesGuard(reflector);
   });
 
@@ -36,12 +39,16 @@ describe('RolesGuard', () => {
   it('역할 불일치 (USER → ADMIN 필요) → ForbiddenException', () => {
     reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
 
-    expect(() => guard.canActivate(createMockContext(UserRole.USER))).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(createMockContext(UserRole.USER))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('user 없음 → ForbiddenException', () => {
     reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
 
-    expect(() => guard.canActivate(createMockContext())).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(createMockContext())).toThrow(
+      ForbiddenException,
+    );
   });
 });

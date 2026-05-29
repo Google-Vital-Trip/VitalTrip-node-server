@@ -50,7 +50,12 @@ describe('EncyclopediaService', () => {
     await service.getTopics('Burns', 0, 50);
 
     expect(mockPrisma.healthTopic.count).toHaveBeenCalledWith({
-      where: { OR: expect.arrayContaining([expect.objectContaining({ title: expect.anything() })]) },
+      where: {
+        OR: [
+          { title: { contains: 'Burns' } },
+          { altTitles: { contains: 'Burns' } },
+        ],
+      },
     });
   });
 

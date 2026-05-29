@@ -9,13 +9,11 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import axios from 'axios';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 
 jest.mock('axios');
 jest.mock('bcrypt');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
 const mockUsersService = {
@@ -114,9 +112,9 @@ describe('AuthService', () => {
     });
 
     it('비밀번호 불일치 → BadRequestException', async () => {
-      await expect(service.signup({ ...dto, passwordConfirm: 'WrongPass1!' })).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.signup({ ...dto, passwordConfirm: 'WrongPass1!' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -136,26 +134,29 @@ describe('AuthService', () => {
     it('존재하지 않는 이메일 → NotFoundException', async () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(null);
 
-      await expect(service.login('none@example.com', 'Password1!')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.login('none@example.com', 'Password1!'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('소셜 로그인 계정(password null) → BadRequestException', async () => {
-      mockUsersService.findByEmailWithPassword.mockResolvedValue({ ...mockUser, password: null });
+      mockUsersService.findByEmailWithPassword.mockResolvedValue({
+        ...mockUser,
+        password: null,
+      });
 
-      await expect(service.login('test@example.com', 'Password1!')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.login('test@example.com', 'Password1!'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('잘못된 비밀번호 → UnauthorizedException', async () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(service.login('test@example.com', 'WrongPass!')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.login('test@example.com', 'WrongPass!'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -171,7 +172,10 @@ describe('AuthService', () => {
 
   describe('refresh', () => {
     it('유효한 토큰 → 새 토큰 반환 및 rotation', async () => {
-      mockJwtService.verify.mockReturnValue({ sub: 1, email: 'test@example.com' });
+      mockJwtService.verify.mockReturnValue({
+        sub: 1,
+        email: 'test@example.com',
+      });
       mockUsersService.findByIdWithRefreshToken.mockResolvedValue(mockUser);
       mockedBcrypt.compare.mockResolvedValue(true as never);
       mockUsersService.updateRefreshToken.mockResolvedValue(undefined);
@@ -187,27 +191,38 @@ describe('AuthService', () => {
         throw new Error('invalid');
       });
 
-      await expect(service.refresh('bad.token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh('bad.token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('refreshToken bcrypt 불일치 → UnauthorizedException', async () => {
-      mockJwtService.verify.mockReturnValue({ sub: 1, email: 'test@example.com' });
+      mockJwtService.verify.mockReturnValue({
+        sub: 1,
+        email: 'test@example.com',
+      });
       mockUsersService.findByIdWithRefreshToken.mockResolvedValue(mockUser);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(service.refresh('wrong.refresh.token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.refresh('wrong.refresh.token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
   describe('checkEmail', () => {
     it('미존재 이메일 → available: true', async () => {
       mockUsersService.existsByEmail.mockResolvedValue(false);
-      expect((await service.checkEmail('new@example.com')).available).toBe(true);
+      expect((await service.checkEmail('new@example.com')).available).toBe(
+        true,
+      );
     });
 
     it('존재 이메일 → available: false', async () => {
       mockUsersService.existsByEmail.mockResolvedValue(true);
-      expect((await service.checkEmail('existing@example.com')).available).toBe(false);
+      expect((await service.checkEmail('existing@example.com')).available).toBe(
+        false,
+      );
     });
   });
 
@@ -226,7 +241,10 @@ describe('AuthService', () => {
 
       await service.changePassword(1, dto);
 
-      expect(mockUsersService.updatePassword).toHaveBeenCalledWith(1, 'newHashed');
+      expect(mockUsersService.updatePassword).toHaveBeenCalledWith(
+        1,
+        'newHashed',
+      );
     });
 
     it('새 비밀번호 불일치 → BadRequestException', async () => {
@@ -236,16 +254,23 @@ describe('AuthService', () => {
     });
 
     it('소셜 로그인 계정 → BadRequestException', async () => {
-      mockUsersService.findByIdWithPassword.mockResolvedValue({ ...mockUser, password: null });
+      mockUsersService.findByIdWithPassword.mockResolvedValue({
+        ...mockUser,
+        password: null,
+      });
 
-      await expect(service.changePassword(1, dto)).rejects.toThrow(BadRequestException);
+      await expect(service.changePassword(1, dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('현재 비밀번호 불일치 → UnauthorizedException', async () => {
       mockUsersService.findByIdWithPassword.mockResolvedValue(mockUser);
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(service.changePassword(1, dto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.changePassword(1, dto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -256,7 +281,10 @@ describe('AuthService', () => {
       mockedBcrypt.compare.mockResolvedValue(true as never);
       mockUsersService.updateRefreshToken.mockResolvedValue(undefined);
 
-      const result = await service.adminLogin('admin@example.com', 'AdminPass1!');
+      const result = await service.adminLogin(
+        'admin@example.com',
+        'AdminPass1!',
+      );
 
       expect(result.accessToken).toBeTruthy();
     });
@@ -265,9 +293,9 @@ describe('AuthService', () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(null);
       const compareSpy = mockedBcrypt.compare.mockResolvedValue(false as never);
 
-      await expect(service.adminLogin('none@example.com', 'Pass1!')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.adminLogin('none@example.com', 'Pass1!'),
+      ).rejects.toThrow(UnauthorizedException);
       expect(compareSpy).toHaveBeenCalled();
     });
 
@@ -275,17 +303,20 @@ describe('AuthService', () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
       mockedBcrypt.compare.mockResolvedValue(true as never);
 
-      await expect(service.adminLogin('test@example.com', 'Pass1!')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.adminLogin('test@example.com', 'Pass1!'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('소셜 로그인 계정 → UnauthorizedException', async () => {
-      mockUsersService.findByEmailWithPassword.mockResolvedValue({ ...mockUser, password: null });
+      mockUsersService.findByEmailWithPassword.mockResolvedValue({
+        ...mockUser,
+        password: null,
+      });
 
-      await expect(service.adminLogin('test@example.com', 'Pass1!')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.adminLogin('test@example.com', 'Pass1!'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -305,7 +336,11 @@ describe('AuthService', () => {
       mockUsersService.linkAppleId.mockResolvedValue(undefined);
       mockUsersService.updateRefreshToken.mockResolvedValue(undefined);
 
-      const result = await service.appleLogin('apple123', 'test@example.com', 'Test');
+      const result = await service.appleLogin(
+        'apple123',
+        'test@example.com',
+        'Test',
+      );
 
       expect(mockUsersService.linkAppleId).toHaveBeenCalledWith(1, 'apple123');
       expect(result.isNewUser).toBe(false);
@@ -317,7 +352,11 @@ describe('AuthService', () => {
       mockUsersService.createAppleUser.mockResolvedValue(mockUser);
       mockUsersService.updateRefreshToken.mockResolvedValue(undefined);
 
-      const result = await service.appleLogin('apple123', 'new@example.com', 'New User');
+      const result = await service.appleLogin(
+        'apple123',
+        'new@example.com',
+        'New User',
+      );
 
       expect(result.isNewUser).toBe(true);
     });
@@ -325,7 +364,9 @@ describe('AuthService', () => {
     it('최초 로그인에 email/name 없음 → BadRequestException', async () => {
       mockUsersService.findByAppleId.mockResolvedValue(null);
 
-      await expect(service.appleLogin('apple123', null, null)).rejects.toThrow(BadRequestException);
+      await expect(service.appleLogin('apple123', null, null)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });
