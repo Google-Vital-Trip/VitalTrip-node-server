@@ -3,6 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { ErrorCode } from '../../common/constants/error-codes';
 import { FacilityType } from '../dto/nearby-query.dto';
@@ -36,6 +37,8 @@ export class GooglePlacesService {
     { data: NearbyFacility[]; expiresAt: number }
   >();
 
+  constructor(private readonly config: ConfigService) {}
+
   async getNearbyFacilities(
     latitude: number,
     longitude: number,
@@ -49,7 +52,7 @@ export class GooglePlacesService {
       return cached.data;
     }
 
-    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    const apiKey = this.config.get<string>('GOOGLE_PLACES_API_KEY');
     if (!apiKey) {
       throw new ServiceUnavailableException({
         message: '주변 의료시설 검색 서비스를 일시적으로 사용할 수 없습니다.',
