@@ -1,7 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import {
+  PrometheusModule,
+  makeCounterProvider,
+  makeHistogramProvider,
+} from '@willsoto/nestjs-prometheus';
 import { PrismaModule } from './prisma/prisma.module';
 import { FirstAidModule } from './first-aid/first-aid.module';
 import { EncyclopediaModule } from './encyclopedia/encyclopedia.module';
@@ -10,13 +15,8 @@ import { UsersModule } from './users/users.module';
 import { UserModule } from './user/user.module';
 import { LocationModule } from './location/location.module';
 import { AdminModule } from './admin/admin.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
-import {
-  makeCounterProvider,
-  makeHistogramProvider,
-} from '@willsoto/nestjs-prometheus';
 
 @Module({
   imports: [
@@ -38,7 +38,6 @@ import {
     LocationModule,
     AdminModule,
   ],
-})
   providers: [
     makeHistogramProvider({
       name: 'http_request_duration_seconds',
