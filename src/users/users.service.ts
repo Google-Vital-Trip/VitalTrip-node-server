@@ -1,11 +1,8 @@
 import { createHash, timingSafeEqual } from 'crypto';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, Provider } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
-
-const SALT_ROUNDS = 10;
 
 export function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
