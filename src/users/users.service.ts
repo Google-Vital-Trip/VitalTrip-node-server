@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
+const SALT_ROUNDS = 12;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -65,7 +67,7 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: number, refreshToken: string | null) {
-    const hashed = refreshToken ? await bcrypt.hash(refreshToken, 10) : null;
+    const hashed = refreshToken ? await bcrypt.hash(refreshToken, SALT_ROUNDS) : null;
     await this.prisma.user.update({
       where: { id },
       data: { refreshToken: hashed },
