@@ -32,9 +32,9 @@ interface GoogleUserInfo {
   picture: string | null;
 }
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 const DUMMY_HASH =
-  '$2b$12$invalidhashpadding00000000000000000000000000000000000000';
+  '$2b$10$invalidhashpadding00000000000000000000000000000000000000';
 
 @Injectable()
 export class AuthService {
