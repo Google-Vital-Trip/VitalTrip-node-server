@@ -29,7 +29,8 @@ export class MetricsInterceptor implements NestInterceptor {
     }
 
     const method = req.method;
-    const route = (req.route?.path as string | undefined) ?? req.path;
+    const routeInfo = req.route as { path: string } | undefined;
+    const route = routeInfo?.path ?? req.path;
     const end = this.histogram.startTimer({ method, route });
 
     const record = (statusCode: number) => {
