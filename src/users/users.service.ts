@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'crypto';
 import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma, Provider } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -5,6 +6,17 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
 const SALT_ROUNDS = 10;
+
+export function hashRefreshToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+export function compareRefreshToken(token: string, hashed: string): boolean {
+  const tokenHash = Buffer.from(hashRefreshToken(token));
+  const storedHash = Buffer.from(hashed);
+  if (tokenHash.length !== storedHash.length) return false;
+  return timingSafeEqual(tokenHash, storedHash);
+}
 
 @Injectable()
 export class UsersService {
@@ -83,7 +95,7 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: number, refreshToken: string | null) {
-    const hashed = refreshToken ? await bcrypt.hash(refreshToken, SALT_ROUNDS) : null;
+    const hashed = refreshToken ? hashRefreshToken(refreshToken) : null;
     await this.prisma.user.update({
       where: { id },
       data: { refreshToken: hashed },
