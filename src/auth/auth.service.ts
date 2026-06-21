@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import axios from 'axios';
-import { UsersService } from '../users/users.service';
+import { UsersService, compareRefreshToken } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -124,7 +124,7 @@ export class AuthService {
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
     const tokenValid = user?.refreshToken
-      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      ? compareRefreshToken(refreshToken, user.refreshToken)
       : false;
     if (!user || !tokenValid) {
       throw new UnauthorizedException({
@@ -395,7 +395,7 @@ export class AuthService {
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
     const tokenValid = user?.refreshToken
-      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      ? compareRefreshToken(refreshToken, user.refreshToken)
       : false;
     if (!user || !tokenValid) {
       throw new UnauthorizedException({

@@ -97,7 +97,8 @@ export class OpenAiService {
   ): Promise<AiAdviceResult> {
     if (process.env.LOAD_TEST === 'true') {
       return {
-        content: 'Apply direct pressure to the wound\nKeep the patient calm\nCall emergency services',
+        content:
+          'Apply direct pressure to the wound\nKeep the patient calm\nCall emergency services',
         summary: 'Mock first aid advice for load testing.',
         recommendedAction: 'Call emergency services immediately.',
         disclaimer: 'This is mock data for load testing only.',

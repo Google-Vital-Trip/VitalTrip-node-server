@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
+import { UsersService, hashRefreshToken } from '../users/users.service';
 
 jest.mock('axios');
 jest.mock('bcrypt');
@@ -59,7 +59,7 @@ const mockUser = {
   password: '$2b$12$hashedpassword',
   role: UserRole.USER,
   provider: 'LOCAL',
-  refreshToken: '$2b$12$hashedrefresh',
+  refreshToken: hashRefreshToken('valid.refresh.token'),
   googleId: null,
   appleId: null,
   birthDate: '1990-01-01',
@@ -177,7 +177,6 @@ describe('AuthService', () => {
         email: 'test@example.com',
       });
       mockUsersService.findByIdWithRefreshToken.mockResolvedValue(mockUser);
-      mockedBcrypt.compare.mockResolvedValue(true as never);
       mockUsersService.updateRefreshToken.mockResolvedValue(undefined);
 
       const result = await service.refresh('valid.refresh.token');
@@ -196,13 +195,12 @@ describe('AuthService', () => {
       );
     });
 
-    it('refreshToken bcrypt 불일치 → UnauthorizedException', async () => {
+    it('refreshToken SHA-256 불일치 → UnauthorizedException', async () => {
       mockJwtService.verify.mockReturnValue({
         sub: 1,
         email: 'test@example.com',
       });
       mockUsersService.findByIdWithRefreshToken.mockResolvedValue(mockUser);
-      mockedBcrypt.compare.mockResolvedValue(false as never);
 
       await expect(service.refresh('wrong.refresh.token')).rejects.toThrow(
         UnauthorizedException,
