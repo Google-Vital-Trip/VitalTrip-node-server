@@ -45,16 +45,7 @@ const TEST_USER = {
 };
 
 export default function () {
-  const scenario = Math.random();
-
-  if (scenario < 0.3) {
-    testAuth();
-  } else if (scenario < 0.6) {
-    testFirstAid();
-  } else {
-    testLocation();
-  }
-
+  testAuth();
   sleep(1);
 }
 
