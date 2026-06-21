@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ErrorCode } from '../common/constants/error-codes';
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
