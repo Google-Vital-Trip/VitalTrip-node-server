@@ -105,7 +105,7 @@ describe('AuthService', () => {
 
       await service.signup(dto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(dto.password, 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith(dto.password, 10);
       expect(mockUsersService.create).toHaveBeenCalledWith(
         expect.objectContaining({ email: dto.email, password: 'hashed' }),
       );
