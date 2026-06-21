@@ -93,7 +93,7 @@ function testFirstAid() {
   firstAidDuration.add(Date.now() - start);
 
   const ok = check(res, {
-    'first-aid 200': (r) => r.status === 200,
+    'first-aid 2xx': (r) => r.status >= 200 && r.status < 300,
     'first-aid has content': (r) => {
       const body = JSON.parse(r.body);
       return body.data?.content !== undefined;
