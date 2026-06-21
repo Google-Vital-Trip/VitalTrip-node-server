@@ -43,6 +43,22 @@ export class GooglePlacesService {
     type: FacilityType,
     language: string,
   ): Promise<NearbyFacility[]> {
+    if (process.env.LOAD_TEST === 'true') {
+      return [
+        {
+          name: '서울대학교병원',
+          address: '서울특별시 종로구 대학로 101',
+          phoneNumber: '02-2072-2114',
+          latitude: 37.58,
+          longitude: 126.99,
+          distance: 0.5,
+          openNow: true,
+          openingHours: null,
+          websiteUrl: null,
+        },
+      ];
+    }
+
     const cacheKey = `${type}:${latitude.toFixed(2)}:${longitude.toFixed(2)}:${radius}:${language}`;
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
