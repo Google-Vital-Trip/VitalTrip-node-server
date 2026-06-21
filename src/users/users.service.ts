@@ -35,15 +35,31 @@ export class UsersService {
   }
 
   async findByEmailWithPassword(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+        role: true,
+        provider: true,
+      },
+    });
   }
 
   async findByIdWithRefreshToken(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, refreshToken: true },
+    });
   }
 
   async findByIdWithPassword(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, password: true },
+    });
   }
 
   async findById(id: number) {
