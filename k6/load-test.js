@@ -17,13 +17,13 @@ export const options = {
       duration: '30s',
       tags: { scenario: 'warmup' },
     },
-    // 2단계: 부하 증가 (10 → 50명, 1분)
+    // 2단계: 부하 증가 (10 → 100명, 1분)
     ramp_up: {
       executor: 'ramping-vus',
       startVUs: 10,
       stages: [
-        { duration: '1m', target: 50 },
-        { duration: '2m', target: 50 },
+        { duration: '1m', target: 100 },
+        { duration: '2m', target: 100 },
         { duration: '30s', target: 0 },
       ],
       startTime: '30s',
@@ -31,8 +31,8 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_duration: ['p(95)<2000'],  // 95%가 2초 이내
-    errors: ['rate<0.05'],              // 에러율 5% 미만
+    http_req_duration: ['p(95)<2000'],
+    errors: ['rate<0.05'],
     first_aid_duration: ['p(95)<3000'],
     location_duration: ['p(95)<1000'],
   },
