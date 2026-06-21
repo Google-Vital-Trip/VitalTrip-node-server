@@ -107,7 +107,7 @@ function testLocation() {
   const start = Date.now();
 
   const res = http.get(
-    `${BASE_URL}/api/location/nearby?latitude=37.5665&longitude=126.978&radius=1000&type=HOSPITAL&language=ko`,
+    `${BASE_URL}/api/location/nearby?latitude=37.5665&longitude=126.978&radius=1000&type=hospital&language=ko`,
   );
 
   locationDuration.add(Date.now() - start);
