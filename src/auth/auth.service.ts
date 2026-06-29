@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import axios from 'axios';
-import { UsersService } from '../users/users.service';
+import { UsersService, compareRefreshToken } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -106,35 +106,7 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    let payload: { sub: number; email: string };
-
-    try {
-      payload = this.jwtService.verify<{ sub: number; email: string }>(
-        refreshToken,
-        {
-          secret: this.config.get<string>('JWT_REFRESH_SECRET'),
-        },
-      );
-    } catch {
-      throw new UnauthorizedException({
-        message: '유효하지 않은 리프레시 토큰입니다.',
-        errorCode: ErrorCode.UNAUTHORIZED,
-      });
-    }
-
-    const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
-    const tokenValid = user?.refreshToken
-      ? await bcrypt.compare(refreshToken, user.refreshToken)
-      : false;
-    if (!user || !tokenValid) {
-      throw new UnauthorizedException({
-        message: '유효하지 않은 리프레시 토큰입니다.',
-        errorCode: ErrorCode.UNAUTHORIZED,
-      });
-    }
-
-    const tokens = this.generateTokens(user.id, user.email);
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+    const { tokens } = await this.verifyAndRotateRefreshToken(refreshToken);
     return tokens;
   }
 
@@ -379,6 +351,20 @@ export class AuthService {
   async adminRefresh(
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    const { user, tokens } =
+      await this.verifyAndRotateRefreshToken(refreshToken);
+
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException({
+        message: '관리자 권한이 필요합니다.',
+        errorCode: ErrorCode.FORBIDDEN,
+      });
+    }
+
+    return tokens;
+  }
+
+  private async verifyAndRotateRefreshToken(refreshToken: string) {
     let payload: { sub: number; email: string };
 
     try {
@@ -395,7 +381,7 @@ export class AuthService {
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
     const tokenValid = user?.refreshToken
-      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      ? compareRefreshToken(refreshToken, user.refreshToken)
       : false;
     if (!user || !tokenValid) {
       throw new UnauthorizedException({
@@ -404,16 +390,9 @@ export class AuthService {
       });
     }
 
-    if (user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException({
-        message: '관리자 권한이 필요합니다.',
-        errorCode: ErrorCode.FORBIDDEN,
-      });
-    }
-
     const tokens = this.generateTokens(user.id, user.email);
     await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
+    return { user, tokens };
   }
 
   private generateTokens(userId: number, email: string) {
