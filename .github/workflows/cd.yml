@@ -19,8 +19,7 @@ jobs:
             git fetch origin main
             DOCS_CHANGED=$(git diff HEAD origin/main --name-only | grep -c 'knowledge-base/documents' || true)
             git pull origin main
-            docker compose down --remove-orphans
-            docker compose up -d --build
+            docker compose up -d --build --remove-orphans
             sleep 30
             POINT_COUNT=$(curl -sf http://localhost:6333/collections/first_aid | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['points_count'])" 2>/dev/null || echo "0")
             if [ "$DOCS_CHANGED" -gt 0 ] || [ "$POINT_COUNT" -eq 0 ]; then
