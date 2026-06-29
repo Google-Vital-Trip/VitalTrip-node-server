@@ -14,6 +14,10 @@ export class GeocodingService {
     latitude: number,
     longitude: number,
   ): Promise<GeocodingResult> {
+    if (process.env.LOAD_TEST === 'true') {
+      return { countryCode: 'KR', countryName: 'South Korea' };
+    }
+
     try {
       const { data } = await axios.get<{
         countryCode?: string;

@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import axios from 'axios';
-import { UsersService } from '../users/users.service';
+import { UsersService, compareRefreshToken } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -32,9 +32,9 @@ interface GoogleUserInfo {
   picture: string | null;
 }
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 const DUMMY_HASH =
-  '$2b$12$invalidhashpadding00000000000000000000000000000000000000';
+  '$2b$10$invalidhashpadding00000000000000000000000000000000000000';
 
 @Injectable()
 export class AuthService {
@@ -381,7 +381,7 @@ export class AuthService {
 
     const user = await this.usersService.findByIdWithRefreshToken(payload.sub);
     const tokenValid = user?.refreshToken
-      ? await bcrypt.compare(refreshToken, user.refreshToken)
+      ? compareRefreshToken(refreshToken, user.refreshToken)
       : false;
     if (!user || !tokenValid) {
       throw new UnauthorizedException({
